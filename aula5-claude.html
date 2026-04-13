@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 5 — Claude · IA para Planilhas e Gráficos</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --cl-sand: #d4a96a;
+  --cl-warm: #c97c3a;
+  --cl-rust: #9c4a1a;
+  --cl-cream: #fdf8f0;
+  --cl-light: #f5ede0;
+  --bg: #1a1208;
+  --card: #231a0e;
+  --border: rgba(212,169,106,0.18);
+  --white: #fdf8f0;
+  --muted: rgba(253,248,240,0.5);
+}
+body { font-family: 'Instrument Sans', sans-serif; background: var(--bg); color: var(--white); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.slides { flex: 1; position: relative; overflow: hidden; }
+.slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; opacity: 0; transform: translateY(30px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; }
+.slide::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 100% 0%, rgba(212,169,106,0.07) 0%, transparent 70%), radial-gradient(ellipse 50% 60% at 0% 100%, rgba(201,124,58,0.05) 0%, transparent 70%); pointer-events: none; }
+.slide.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+.slide.exit { opacity: 0; transform: translateY(-30px); }
+.progress { height: 3px; background: rgba(212,169,106,0.08); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--cl-rust), var(--cl-warm), var(--cl-sand)); transition: width 0.4s ease; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 2rem; background: rgba(212,169,106,0.03); border-top: 1px solid rgba(212,169,106,0.1); flex-shrink: 0; }
+.nav-course { font-size: 0.68rem; color: rgba(253,248,240,0.3); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.1rem; }
+.nav-title { font-size: 0.82rem; color: rgba(253,248,240,0.6); font-weight: 500; }
+.nav-controls { display: flex; align-items: center; gap: 0.8rem; }
+.nav-counter { font-size: 0.78rem; color: var(--muted); }
+.btn { background: rgba(212,169,106,0.08); border: 1px solid rgba(212,169,106,0.2); color: var(--white); padding: 0.45rem 1.1rem; border-radius: 6px; font-family: 'Instrument Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+.btn:hover { background: rgba(212,169,106,0.18); border-color: var(--cl-sand); }
+.btn:disabled { opacity: 0.25; cursor: default; }
+.kbd-hint { position: fixed; bottom: 4.5rem; right: 1.5rem; font-size: 0.68rem; color: rgba(255,255,255,0.1); }
+
+.slide-label { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cl-sand); margin-bottom: 0.7rem; }
+.slide-h2 { font-family: 'Instrument Serif', serif; font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin-bottom: 1.4rem; line-height: 1.2; }
+
+/* CAPA */
+.s-cover { text-align: center; }
+.claude-logo { width: 70px; height: 70px; margin: 0 auto 1.8rem; }
+.cover-kicker { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1rem; }
+.cover-h1 { font-family: 'Instrument Serif', serif; font-size: clamp(2.2rem, 5.5vw, 3.8rem); line-height: 1.1; margin-bottom: 0.9rem; }
+.cover-h1 i { color: var(--cl-sand); }
+.cover-sub { font-size: 1rem; color: var(--muted); margin-bottom: 2rem; font-weight: 300; }
+.chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.chip { padding: 0.35rem 1rem; border-radius: 20px; font-size: 0.77rem; border: 1px solid; }
+.chip-s { border-color: var(--cl-sand); color: var(--cl-sand); background: rgba(212,169,106,0.07); }
+.chip-w { border-color: var(--cl-warm); color: #e89050; background: rgba(201,124,58,0.07); }
+
+/* AGENDA */
+.agenda-list { display: flex; flex-direction: column; gap: 0.65rem; width: 100%; max-width: 740px; }
+.ar { display: grid; grid-template-columns: 72px 1fr; gap: 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; align-items: center; }
+.at { font-size: 0.73rem; color: var(--cl-sand); font-weight: 600; }
+.ad { font-size: 0.88rem; color: rgba(253,248,240,0.8); }
+
+/* CARDS */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 840px; }
+.fc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; }
+.fc .fci { font-size: 1.7rem; margin-bottom: 0.7rem; }
+.fc h3 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.4rem; }
+.fc p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.info-box { background: rgba(212,169,106,0.06); border: 1px solid rgba(212,169,106,0.18); border-radius: 8px; padding: 0.9rem 1.1rem; font-size: 0.86rem; color: rgba(253,248,240,0.7); line-height: 1.5; margin-top: 1rem; width: 100%; max-width: 840px; }
+
+/* PROMPT */
+.prompt-wrap { width: 100%; max-width: 820px; }
+.prompt-box { background: #0d0804; border: 1px solid rgba(212,169,106,0.22); border-radius: 12px; overflow: hidden; margin-top: 1.2rem; }
+.pb-bar { background: rgba(212,169,106,0.06); padding: 0.55rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-bottom: 1px solid rgba(212,169,106,0.1); }
+.pb-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pb-label { font-size: 0.68rem; color: rgba(253,248,240,0.25); margin-left: auto; }
+.pb-code { padding: 1.2rem 1.4rem; font-family: 'Courier New', monospace; font-size: 0.82rem; line-height: 1.9; color: rgba(253,248,240,0.78); }
+.pc-var { color: var(--cl-sand); background: rgba(212,169,106,0.08); padding: 0 0.2rem; }
+.pc-key { color: #e89050; }
+.pc-cm { color: rgba(253,248,240,0.25); }
+.tip-bar { background: rgba(201,124,58,0.05); border-top: 1px solid rgba(201,124,58,0.1); padding: 0.65rem 1.1rem; font-size: 0.78rem; color: var(--muted); }
+
+/* PLANILHA EXEMPLO */
+.sheet-demo { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; width: 100%; max-width: 820px; margin-top: 1.2rem; }
+.sheet-header { background: rgba(212,169,106,0.08); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--cl-sand); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+table.sheet { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+table.sheet th { background: rgba(212,169,106,0.06); padding: 0.55rem 0.8rem; text-align: left; font-size: 0.72rem; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+table.sheet td { padding: 0.55rem 0.8rem; border-bottom: 1px solid rgba(212,169,106,0.07); color: rgba(253,248,240,0.75); }
+table.sheet tr:last-child td { border-bottom: none; }
+.nota { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.75rem; }
+.n-ok { background: rgba(46,196,150,0.12); color: #5dd4a5; }
+.n-mid { background: rgba(249,199,79,0.12); color: #fbd97a; }
+.n-low { background: rgba(230,57,70,0.12); color: #ff8080; }
+
+/* GRAFICO VISUAL */
+.chart-visual { display: flex; align-items: flex-end; gap: 0.6rem; width: 100%; max-width: 700px; height: 180px; margin-top: 1.5rem; padding: 0 1rem; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; flex: 1; }
+.bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+.bar-label { font-size: 0.7rem; color: var(--muted); text-align: center; }
+.bar-val { font-size: 0.72rem; font-weight: 600; color: var(--cl-sand); }
+
+/* FÓRMULAS */
+.formula-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 840px; margin-top: 1.5rem; }
+.formula-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; }
+.formula-card .fc-label { font-size: 0.7rem; color: var(--cl-sand); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.formula-card .fc-desc { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.5rem; line-height: 1.4; }
+.formula-code { font-family: 'Courier New', monospace; font-size: 0.78rem; background: rgba(0,0,0,0.4); border-radius: 5px; padding: 0.5rem 0.7rem; color: var(--cl-sand); }
+
+/* USOS */
+.ua-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 860px; }
+.ua { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+.ua .uai { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.ua h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+.ua p { font-size: 0.77rem; color: var(--muted); line-height: 1.4; }
+.ua-prompt { margin-top: 0.7rem; background: rgba(0,0,0,0.35); border-radius: 5px; padding: 0.5rem 0.7rem; font-family: 'Courier New', monospace; font-size: 0.7rem; color: var(--cl-sand); line-height: 1.5; }
+
+/* DICAS */
+.dicas-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 820px; margin-top: 1.5rem; }
+.dc { border-radius: 12px; padding: 1.2rem; font-size: 0.84rem; }
+.dc-do { background: rgba(46,200,150,0.06); border: 1px solid rgba(46,200,150,0.16); }
+.dc-no { background: rgba(230,57,70,0.06); border: 1px solid rgba(230,57,70,0.16); }
+.dc-title { font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.7rem; }
+.dc-do .dc-title { color: #5dd4a5; }
+.dc-no .dc-title { color: #ff8080; }
+.dc ul { padding-left: 1rem; }
+.dc li { margin-bottom: 0.4rem; color: rgba(253,248,240,0.7); }
+
+/* ATIVIDADE */
+.ativ-box { background: linear-gradient(135deg, rgba(156,74,26,0.15), rgba(212,169,106,0.07)); border: 1px solid rgba(212,169,106,0.22); border-radius: 14px; padding: 1.8rem; width: 100%; max-width: 760px; margin-top: 1.5rem; }
+.ativ-steps { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.ativ-steps li { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.87rem; color: rgba(253,248,240,0.8); line-height: 1.5; }
+.sb { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--cl-rust), var(--cl-sand)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
+
+/* ENCERRA — especial, celebração */
+.s-encerra { text-align: center; }
+.enc-big { font-family: 'Instrument Serif', serif; font-size: clamp(1.8rem, 4vw, 3.2rem); line-height: 1.2; margin-bottom: 1rem; }
+.enc-big i { color: var(--cl-sand); }
+.enc-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.7; max-width: 560px; }
+.resumo-grid { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+.rcard { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1.1rem; font-size: 0.78rem; color: rgba(253,248,240,0.6); display: flex; align-items: center; gap: 0.5rem; }
+.rcard strong { color: var(--cl-sand); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  body { height: auto; overflow-y: auto; }
+  .slides { flex: none; height: auto; overflow: visible; position: static; }
+  .slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: none;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 80svh;
+    justify-content: flex-start;
+    padding-top: 1.8rem;
+  }
+  .slide.active { display: flex; }
+  .slide::before { display: none; }
+  .progress { position: sticky; top: 0; z-index: 10; }
+  .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.7rem 1rem; }
+  .nav-info, .nav-controls { width: 100%; }
+  .nav-controls { justify-content: flex-end; }
+  .kbd-hint { display: none; }
+  .slide-label { font-size: 0.65rem; }
+  .slide-h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .agenda-list { gap: 0.5rem; }
+  .ar { grid-template-columns: 60px 1fr; gap: 0.6rem; padding: 0.7rem 0.9rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .ua-grid { grid-template-columns: 1fr; }
+  .dicas-cols { grid-template-columns: 1fr; }
+  .formula-grid { grid-template-columns: 1fr; }
+  .sheet-demo { overflow-x: auto; }
+  table.sheet { font-size: 0.72rem; }
+  table.sheet th, table.sheet td { padding: 0.4rem 0.5rem; }
+  .pb-code { font-size: 0.74rem; padding: 1rem; }
+  .ativ-box { padding: 1.2rem; }
+  .ativ-steps li { font-size: 0.83rem; }
+  .enc-big { font-size: 1.5rem; }
+  .cover-h1 { font-size: 1.8rem; }
+  .claude-logo { width: 54px; height: 54px; }
+  .info-box { font-size: 0.82rem; }
+  .resumo-grid { gap: 0.5rem; }
+}
+
+
+.info-card { cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; position: relative; }
+.info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.info-card-hint { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.3; margin-top: 0.6rem; display: block; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 1.2rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #120d04; border: 1px solid rgba(212,169,106,0.22); border-radius: 16px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: mIn 0.28s ease; }
+@keyframes mIn { from { opacity:0; transform: scale(0.94) translateY(14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.3rem 1.4rem 0.9rem; border-bottom: 1px solid rgba(212,169,106,0.1); gap: 0.8rem; }
+.modal-icon-title { display: flex; align-items: center; gap: 0.8rem; }
+.modal-icon { font-size: 2rem; flex-shrink: 0; }
+.modal-title { font-family:'Instrument Serif',serif; font-size: 1.1rem; line-height: 1.2; }
+.modal-sub { font-size: 0.7rem; opacity: 0.35; margin-top: 0.2rem; }
+.modal-close { background: rgba(212,169,106,0.08); border: 1px solid rgba(212,169,106,0.18); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-close:hover { background: rgba(212,169,106,0.2); }
+.modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-lbl { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.13em; color: #d4a96a; font-weight: 600; margin-bottom: 0.3rem; }
+.modal-def { font-size: 0.87rem; line-height: 1.65; opacity: 0.82; }
+.modal-ex { background: rgba(212,169,106,0.06); border-left: 3px solid #d4a96a; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; font-size: 0.83rem; line-height: 1.6; opacity: 0.88; }
+.modal-prompt { background: rgba(0,0,0,0.5); border: 1px solid rgba(212,169,106,0.1); border-radius: 8px; padding: 0.85rem 1rem; font-family: monospace; font-size: 0.77rem; line-height: 1.75; color: rgba(253,246,236,0.72); }
+.modal-prompt .mv { color: #fdd663; background: rgba(251,188,4,0.1); padding: 0 0.15rem; border-radius: 2px; }
+.modal-tip { font-size: 0.79rem; opacity: 0.5; line-height: 1.5; }
+@media (max-width: 600px) { .modal-box { max-height: 92vh; } .modal-header,.modal-body { padding-left:1rem; padding-right:1rem; } }
+
+</style>
+</head>
+<body>
+<div class="slides">
+
+  <!-- SLIDE 1: CAPA -->
+  <div class="slide s-cover active">
+    <div class="claude-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="clg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#9c4a1a"/><stop offset="50%" stop-color="#c97c3a"/><stop offset="100%" stop-color="#d4a96a"/></linearGradient></defs>
+        <circle cx="50" cy="50" r="45" fill="url(#clg)" opacity="0.2" stroke="url(#clg)" stroke-width="1.5"/>
+        <path d="M32 68 L50 22 L68 68" stroke="url(#clg)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M38 54 L62 54" stroke="url(#clg)" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="cover-kicker">Curso IA para Professores · Aula 5 de 5</div>
+    <h1 class="cover-h1">IA para Planilhas,<br><i>Gráficos e Dados</i></h1>
+    <div class="cover-sub">Usando o Claude para organizar notas, criar fórmulas e visualizar dados educacionais</div>
+    <div class="chips">
+      <span class="chip chip-s">⏱ 1 hora</span>
+      <span class="chip chip-w">△ Claude · Anthropic</span>
+      <span class="chip chip-s">💻 Online / EAD</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide">
+    <div style="width:100%;max-width:740px">
+      <div class="slide-label">Agenda da Aula</div>
+      <h2 class="slide-h2">O que vamos fazer hoje?</h2>
+      <div class="agenda-list">
+        <div class="ar"><div class="at">0–10 min</div><div class="ad">Apresentação do Claude e como ele lida com dados e planilhas</div></div>
+        <div class="ar"><div class="at">10–22 min</div><div class="ad">Organizando notas e listas de alunos com IA</div></div>
+        <div class="ar"><div class="at">22–38 min</div><div class="ad">Criando fórmulas, tabelas e estruturas de planilha com Claude</div></div>
+        <div class="ar"><div class="at">38–50 min</div><div class="ad">Interpretando dados e gerando análises de desempenho</div></div>
+        <div class="ar"><div class="at">50–60 min</div><div class="ad">Atividade prática, revisão do curso e encerramento</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: O QUE É CLAUDE -->
+  <div class="slide">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">Ferramenta da Aula</div>
+      <h2 class="slide-h2">O que é o Claude?</h2>
+      <div class="feature-grid">
+        <div class="fc"><div class="fci">🏛</div><h3>IA da Anthropic</h3><p>Desenvolvido pela Anthropic com foco em segurança, honestidade e utilidade. Excelente para tarefas longas e análises.</p></div>
+        <div class="fc"><div class="fci">📊</div><h3>Forte em dados e raciocínio</h3><p>Cria fórmulas de planilhas, interpreta tabelas, analisa padrões e sugere estruturas de organização de dados.</p></div>
+        <div class="fc"><div class="fci">💬</div><h3>Conversa longa e contextual</h3><p>Lembra de todo o contexto da conversa — ideal para refinar planilhas e tabelas progressivamente.</p></div>
+        <div class="fc"><div class="fci">🆓</div><h3>Gratuito no Claude.ai</h3><p>Disponível em claude.ai sem cadastro. A versão gratuita já permite uso completo para fins educacionais.</p></div>
+      </div>
+      <div class="info-box">✦ Acesse em claude.ai — funciona no navegador e no celular, sem instalar nada.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: PROMPT PLANILHA -->
+  <div class="slide">
+    <div class="prompt-wrap">
+      <div class="slide-label">Prompt Pronto · Planilha de Notas</div>
+      <h2 class="slide-h2">Criando uma planilha de notas com IA</h2>
+      <div class="prompt-box">
+        <div class="pb-bar">
+          <div class="pb-dot" style="background:#d4a96a"></div>
+          <div class="pb-dot" style="background:#c97c3a"></div>
+          <div class="pb-dot" style="background:#9c4a1a"></div>
+          <span class="pb-label">Claude · Prompt</span>
+        </div>
+        <div class="pb-code">
+          <span class="pc-cm">// Cole no Claude (claude.ai) e ajuste os campos em amarelo</span><br><br>
+          Crie uma estrutura de planilha para controle de notas de uma turma<br>
+          com <span class="pc-var">[número de alunos]</span> alunos do <span class="pc-var">[ano/série]</span>.<br><br>
+          <span class="pc-key">A planilha deve ter:</span><br>
+          - Colunas: Nome do aluno, <span class="pc-var">[atividade 1]</span>, <span class="pc-var">[atividade 2]</span>, Prova, Média<br>
+          - Pesos: <span class="pc-var">[atividades = X%]</span>, <span class="pc-var">[prova = Y%]</span><br>
+          - Coluna de situação: Aprovado / Recuperação / Reprovado<br>
+          - Fórmula da média ponderada em Excel/Google Sheets<br><br>
+          Explique cada fórmula usada de forma simples.
+        </div>
+        <div class="tip-bar">💡 Depois peça: "Agora gere também uma fórmula para calcular a média da turma e destacar alunos abaixo de 5."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: EXEMPLO PLANILHA -->
+  <div class="slide">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Exemplo Gerado pelo Claude</div>
+      <h2 class="slide-h2">Planilha de notas estruturada pela IA</h2>
+      <div class="sheet-demo">
+        <div class="sheet-header">📊 Notas — 8º Ano A · Bimestre 2</div>
+        <table class="sheet">
+          <thead><tr><th>Aluno</th><th>Ativ. 1 (20%)</th><th>Ativ. 2 (20%)</th><th>Prova (60%)</th><th>Média</th><th>Situação</th></tr></thead>
+          <tbody>
+            <tr><td>Ana Lima</td><td>8,5</td><td>9,0</td><td>8,0</td><td><span class="nota n-ok">8,4</span></td><td>✅ Aprovada</td></tr>
+            <tr><td>Bruno Silva</td><td>6,0</td><td>5,5</td><td>4,5</td><td><span class="nota n-low">5,0</span></td><td>⚠️ Recuperação</td></tr>
+            <tr><td>Carla Santos</td><td>7,0</td><td>8,0</td><td>7,5</td><td><span class="nota n-ok">7,6</span></td><td>✅ Aprovada</td></tr>
+            <tr><td>Diego Ramos</td><td>4,0</td><td>3,5</td><td>3,0</td><td><span class="nota n-low">3,4</span></td><td>❌ Reprovado</td></tr>
+            <tr><td>Elena Costa</td><td>9,5</td><td>9,0</td><td>9,5</td><td><span class="nota n-ok">9,4</span></td><td>✅ Aprovada</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-family:'Courier New',monospace;font-size:0.75rem;color:rgba(253,248,240,0.5);margin-top:0.8rem;padding:0.6rem 0.8rem;background:rgba(0,0,0,0.3);border-radius:6px">
+        Fórmula gerada pelo Claude: =B2*0,20 + C2*0,20 + D2*0,60
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: FÓRMULAS -->
+  <div class="slide">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">Fórmulas com IA</div>
+      <h2 class="slide-h2">Peça fórmulas em linguagem natural</h2>
+      <div class="formula-grid">
+        <div class="formula-card">
+          <div class="fc-label">Média ponderada</div>
+          <div class="fc-desc">Calcular média com pesos diferentes para atividades e prova.</div>
+          <div class="formula-code">=B2*0.2 + C2*0.2 + D2*0.6</div>
+        </div>
+        <div class="formula-card">
+          <div class="fc-label">Situação do aluno</div>
+          <div class="fc-desc">Mostrar "Aprovado", "Recuperação" ou "Reprovado" automaticamente.</div>
+          <div class="formula-code">=SE(E2>=7,"Aprovado",SE(E2>=5,"Recuperação","Reprovado"))</div>
+        </div>
+        <div class="formula-card">
+          <div class="fc-label">Contar aprovados</div>
+          <div class="fc-desc">Contar quantos alunos estão aprovados na turma.</div>
+          <div class="formula-code">=CONT.SE(F2:F35,"Aprovado")</div>
+        </div>
+        <div class="formula-card">
+          <div class="fc-label">Média da turma</div>
+          <div class="fc-desc">Calcular a média geral de toda a coluna de médias.</div>
+          <div class="formula-code">=MÉDIA(E2:E35)</div>
+        </div>
+      </div>
+      <div class="info-box" style="margin-top:1rem">✦ Basta descrever o que você quer em português — o Claude escreve a fórmula correta para Excel ou Google Sheets.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: OUTROS USOS -->
+  <div class="slide">
+    <div style="width:100%;max-width:860px">
+      <div class="slide-label">Mais Aplicações</div>
+      <h2 class="slide-h2">O que mais o Claude pode fazer com dados</h2>
+      <div class="ua-grid">
+        <div class="ua">
+          <div class="uai">📈</div>
+          <h3>Análise de desempenho</h3>
+          <p>Cole notas no chat e peça uma análise: quais alunos precisam de atenção, qual atividade teve pior desempenho.</p>
+          <div class="ua-prompt">"Analise estas notas e identifique padrões: [notas]"</div>
+        </div>
+        <div class="ua">
+          <div class="uai">📋</div>
+          <h3>Lista de chamada</h3>
+          <p>Gere uma tabela de chamada formatada com colunas por dia, semana ou bimestre.</p>
+          <div class="ua-prompt">"Crie uma tabela de chamada para 30 alunos, 20 aulas"</div>
+        </div>
+        <div class="ua">
+          <div class="uai">📊</div>
+          <h3>Gráficos de desempenho</h3>
+          <p>Peça ao Claude para descrever qual tipo de gráfico usar e como criar no Google Sheets ou Excel.</p>
+          <div class="ua-prompt">"Que gráfico usar para comparar notas de 4 bimestres?"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: ANÁLISE DE DADOS -->
+  <div class="slide">
+    <div class="prompt-wrap">
+      <div class="slide-label">Prompt Pronto · Análise de Turma</div>
+      <h2 class="slide-h2">Pedindo análise de desempenho ao Claude</h2>
+      <div class="prompt-box">
+        <div class="pb-bar">
+          <div class="pb-dot" style="background:#d4a96a"></div>
+          <div class="pb-dot" style="background:#c97c3a"></div>
+          <div class="pb-dot" style="background:#9c4a1a"></div>
+          <span class="pb-label">Claude · Análise de dados</span>
+        </div>
+        <div class="pb-code">
+          <span class="pc-cm">// Cole suas notas reais no lugar dos exemplos</span><br><br>
+          Aqui estão as médias do <span class="pc-var">[bimestre]</span> da turma <span class="pc-var">[turma]</span>:<br>
+          <span class="pc-key">[Liste: Nome — Nota]</span><br>
+          Ex: Ana 7.5 / Bruno 4.0 / Carla 8.2 ...<br><br>
+          Com base nesses dados:<br>
+          1. Quantos alunos estão abaixo da média?<br>
+          2. Qual é a média geral da turma?<br>
+          3. Quais alunos precisam de mais atenção?<br>
+          4. Sugira uma estratégia de intervenção simples.
+        </div>
+        <div class="tip-bar">💡 Sem precisar de Excel — cole os dados no chat e receba a análise em segundos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: DICAS -->
+  <div class="slide">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Boas Práticas</div>
+      <h2 class="slide-h2">Como usar o Claude com planilhas</h2>
+      <div class="dicas-cols">
+        <div class="dc dc-do">
+          <div class="dc-title">✔ Faça isso</div>
+          <ul>
+            <li>Descreva o que você quer em linguagem simples</li>
+            <li>Peça fórmulas para Excel E para Google Sheets</li>
+            <li>Cole dados sem nomes reais — use "Aluno 1, Aluno 2"</li>
+            <li>Peça ao Claude para explicar cada fórmula</li>
+            <li>Use o Claude para interpretar resultados, não só calculá-los</li>
+          </ul>
+        </div>
+        <div class="dc dc-no">
+          <div class="dc-title">✖ Evite isso</div>
+          <ul>
+            <li>Inserir nomes e dados pessoais reais de alunos</li>
+            <li>Usar fórmulas sem testar em uma planilha real</li>
+            <li>Depender da IA para decisões pedagógicas importantes</li>
+            <li>Esquecer de verificar se os cálculos estão corretos</li>
+            <li>Usar formatação de fórmulas sem ajustar para o idioma (ponto x vírgula)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: ATIVIDADE -->
+  <div class="slide">
+    <div style="width:100%;max-width:760px">
+      <div class="slide-label">Agora é com você!</div>
+      <h2 class="slide-h2">Atividade final: sua planilha com IA</h2>
+      <div class="ativ-box">
+        <ol class="ativ-steps">
+          <li><div class="sb">1</div>Acesse claude.ai no navegador (sem necessidade de cadastro para começar).</li>
+          <li><div class="sb">2</div>Use o prompt de planilha de notas desta aula, com os dados da sua turma (sem nomes reais).</li>
+          <li><div class="sb">3</div>Copie a estrutura gerada e cole no Google Sheets ou Excel.</li>
+          <li><div class="sb">4</div>Teste as fórmulas com dados fictícios — funcionaram corretamente?</li>
+          <li><div class="sb">5</div>Peça ao Claude para adicionar uma coluna de "Observações" com textos automáticos por situação.</li>
+          <li><div class="sb">6</div>Compartilhe no fórum: o que você faria diferente agora com suas planilhas?</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: REVISÃO DO CURSO -->
+  <div class="slide">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">Revisão Geral</div>
+      <h2 class="slide-h2">As 5 IAs que você aprendeu neste curso</h2>
+      <div style="display:flex;flex-direction:column;gap:0.7rem;margin-top:1.5rem">
+        <div class="ar" style="border-color:rgba(26,115,232,0.2)"><div style="font-size:1.1rem">✦</div><div class="ad"><strong style="color:#7ab0f5">Gemini</strong> — Criar materiais didáticos, planos de aula, exercícios e rubricas</div></div>
+        <div class="ar" style="border-color:rgba(0,120,212,0.2)"><div style="font-size:1.1rem">🛡</div><div class="ad"><strong style="color:#50b0f0">Copilot</strong> — E-mails, comunicados, atas e documentos administrativos</div></div>
+        <div class="ar" style="border-color:rgba(0,229,255,0.2)"><div style="font-size:1.1rem">🔍</div><div class="ad"><strong style="color:#00e5ff">DeepSeek</strong> — Mediação pedagógica, tutoria de alunos e debates em sala</div></div>
+        <div class="ar" style="border-color:rgba(245,130,42,0.2)"><div style="font-size:1.1rem">📓</div><div class="ad"><strong style="color:#fba96a">NotebookLM</strong> — Mapas conceituais, guias de estudo e podcasts dos seus materiais</div></div>
+        <div class="ar" style="border-color:rgba(212,169,106,0.25)"><div style="font-size:1.1rem">△</div><div class="ad"><strong style="color:#d4a96a">Claude</strong> — Planilhas, fórmulas, análise de notas e interpretação de dados</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ENCERRAMENTO FINAL -->
+  <div class="slide s-encerra">
+    <div class="slide-label">Curso Concluído 🎉</div>
+    <div class="enc-big">Parabéns!<br>Você completou o curso<br><i>IA para Professores.</i></div>
+    <p class="enc-sub">Agora você tem ferramentas, prompts prontos e confiança<br>para usar a inteligência artificial no seu dia a dia como educador.<br><br>A IA não substitui o professor — ela <strong>amplifica</strong> o seu impacto.</p>
+    <div class="resumo-grid">
+      <div class="rcard"><strong>5</strong> módulos</div>
+      <div class="rcard"><strong>5</strong> ferramentas de IA</div>
+      <div class="rcard"><strong>20+</strong> prompts prontos</div>
+      <div class="rcard"><strong>5</strong> atividades práticas</div>
+    </div>
+  </div>
+
+</div>
+<div class="progress"><div class="progress-fill" id="progressFill" style="width:8.33%"></div></div>
+<div class="nav">
+  <div>
+    <div class="nav-course">Curso IA para Professores</div>
+    <div class="nav-title">Aula 5 · IA para Planilhas e Gráficos · Claude</div>
+  </div>
+  <div class="nav-controls">
+    <span class="nav-counter" id="counter">1 / 12</span>
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+  </div>
+</div>
+<div class="kbd-hint">← →</div>
+<script>
+let current = 0; const total = 12;
+function changeSlide(dir) {
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active'); slides[current].classList.add('exit');
+  setTimeout(() => slides[current].classList.remove('exit'), 450);
+  current = Math.max(0, Math.min(total - 1, current + dir));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / total) * 100}%`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const _MD={};
+function regCard(el,d){
+  el.classList.add('info-card');
+  const id='c'+Math.random().toString(36).slice(2,7);
+  _MD[id]=d; el.dataset.mid=id;
+  el.addEventListener('click',()=>openModal(id));
+  const h=document.createElement('span');
+  h.className='info-card-hint'; h.textContent='🔍 clique para detalhes';
+  el.appendChild(h);
+}
+function openModal(id){
+  const d=_MD[id]; if(!d) return;
+  document.getElementById('mIcon').textContent=d.icon||'📌';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub||'';
+  let h='';
+  if(d.def) h+=`<div><div class="modal-lbl">O que é</div><div class="modal-def">${d.def}</div></div>`;
+  if(d.ex)  h+=`<div><div class="modal-lbl">Exemplo real — sala de aula</div><div class="modal-ex">${d.ex}</div></div>`;
+  if(d.pr)  h+=`<div><div class="modal-lbl">Prompt para usar agora</div><div class="modal-prompt">${d.pr}</div></div>`;
+  if(d.tip) h+=`<div class="modal-tip">💡 ${d.tip}</div>`;
+  document.getElementById('mBody').innerHTML=h;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // SLIDE 3 — Features Claude
+  const fcards = document.querySelectorAll('.fc');
+  const fcData = [
+    { icon:'🏛', title:'IA da Anthropic', sub:'claude.ai',
+      def:'Claude é desenvolvido pela Anthropic, uma empresa de IA fundada por ex-membros da OpenAI com foco em segurança e alinhamento. O modelo é treinado para ser honesto, útil e inofensivo — o que o torna adequado para uso educacional.',
+      ex:'A professora Carla precisa analisar 30 redações de alunos e dar feedback detalhado. Ela cola cada redação no Claude e pede análise baseada nos critérios da proposta. O Claude identifica pontos fortes, erros de coesão e sugere melhorias — com tom construtivo.',
+      pr:'Analise esta redação de aluno do <span class="mv">[ano]</span> com base nos critérios: <span class="mv">[critérios]</span>. Aponte: 3 pontos fortes, 3 pontos a melhorar e sugira uma frase de reescrita para o trecho mais fraco. Tom: encorajador.',
+      tip:'O Claude tem uma das maiores janelas de contexto do mercado — você pode colar documentos inteiros de até 200 páginas em uma única conversa.' },
+    { icon:'📊', title:'Forte em dados e raciocínio', sub:'Planilhas e análises',
+      def:'Claude é excelente para criar fórmulas de planilhas, interpretar tabelas de notas, identificar padrões em dados e gerar análises narrativas de desempenho — tudo em linguagem natural.',
+      ex:'O professor Antônio tem 8 turmas com 35 alunos cada. Ele cola as médias do bimestre no Claude e pede: "identifique padrões: qual disciplina teve pior desempenho em todas as turmas? Quais turmas têm mais alunos em risco?". Recebe análise em 30 segundos.',
+      pr:'Analise estes dados de desempenho: <span class="mv">[cole as notas]</span>. Identifique: 1) Disciplina com menor desempenho, 2) Padrões entre turmas, 3) Sugestão de intervenção prioritária. Formato: texto executivo com 3 tópicos.',
+      tip:'Use dados com nomes genéricos ("Aluno 1, Aluno 2") para proteger a privacidade. O Claude analisa os números sem precisar de nomes reais.' },
+    { icon:'💬', title:'Conversa longa e contextual', sub:'Lembra de tudo na conversa',
+      def:'Diferente de algumas IAs, o Claude mantém o contexto de toda a conversa — você pode refinar, ajustar e iterar sobre um documento sem precisar repetir o contexto a cada mensagem.',
+      ex:'A professora Sônia usa o Claude para desenvolver um projeto pedagógico em 5 etapas. Ela começa com "crie a introdução", depois pede "agora os objetivos coerentes com a introdução", depois "a metodologia alinhada aos objetivos" — o Claude mantém a coerência ao longo de toda a conversa.',
+      pr:'Vamos desenvolver um projeto pedagógico juntos em etapas. Primeiro: crie a justificativa para um projeto sobre <span class="mv">[tema]</span> para o <span class="mv">[ano]</span>. Em seguida, esperarei seu texto para continuarmos com os objetivos.',
+      tip:'Em conversas longas, se o Claude parecer perder o fio, diga: "relembre o contexto: estamos criando [X] e o objetivo é [Y]" — ele retoma imediatamente.' },
+    { icon:'🆓', title:'Gratuito no Claude.ai', sub:'Sem necessidade de cadastro inicial',
+      def:'A versão gratuita do Claude está disponível em claude.ai. O plano gratuito permite uso diário com limite de mensagens — suficiente para uso educacional cotidiano. Não requer cartão de crédito.',
+      ex:'A professora Kelly usa o Claude gratuitamente para criar todo o material do bimestre: 4 planos de aula, 2 listas de exercícios, 1 prova e feedback de redações — sem gastar nada, usando o plano gratuito.',
+      pr:'',
+      tip:'O Claude gratuito tem um limite diário de mensagens que se renova a cada dia. Para uso intensivo em uma sessão, planeje as perguntas mais importantes primeiro.' },
+  ];
+  fcards.forEach((el,i)=>{ if(fcData[i]) regCard(el, fcData[i]); });
+
+  // SLIDE 6 — Fórmulas
+  const formCards = document.querySelectorAll('.formula-card');
+  const formData = [
+    { icon:'🔢', title:'Média Ponderada', sub:'Excel e Google Sheets',
+      def:'A média ponderada atribui pesos diferentes para cada avaliação. No Excel e Google Sheets, é calculada multiplicando cada nota pelo seu peso e somando os resultados.',
+      ex:'Professor Jorge tem: Atividade 1 (peso 20%), Atividade 2 (peso 20%) e Prova (peso 60%). A fórmula =B2*0.2+C2*0.2+D2*0.6 calcula automaticamente a média de cada aluno.',
+      pr:'Crie uma fórmula para calcular média ponderada com os seguintes pesos: <span class="mv">[atividade 1 = X%]</span>, <span class="mv">[atividade 2 = X%]</span>, <span class="mv">[prova = X%]</span>. As notas estão nas colunas B, C e D, começando na linha 2. Para Excel e para Google Sheets.',
+      tip:'Sempre teste com valores conhecidos: se um aluno tirou 10 em tudo, a média deve ser 10. Se não der, há erro na fórmula.' },
+    { icon:'🎯', title:'Situação do Aluno', sub:'Aprovado / Recuperação / Reprovado',
+      def:'A função SE (ou IF) verifica uma condição e retorna valores diferentes dependendo do resultado. Encadeando SEs, você cria regras para classificar automaticamente cada aluno.',
+      ex:'A professora Lucia usa =SE(E2>=7,"Aprovado",SE(E2>=5,"Recuperação","Reprovado")). Quando lança as notas, a coluna de situação atualiza automaticamente — sem precisar classificar manualmente os 38 alunos.',
+      pr:'Crie uma fórmula para classificar alunos com as seguintes regras: <span class="mv">[nota >= X = Aprovado]</span>, <span class="mv">[nota >= Y = Recuperação]</span>, <span class="mv">[nota < Y = Reprovado]</span>. A média está na coluna E. Para Excel e Google Sheets.',
+      tip:'Para adicionar cores automáticas (vermelho = reprovado, amarelo = recuperação, verde = aprovado), use "Formatação Condicional" após inserir a fórmula.' },
+    { icon:'📊', title:'Contar Aprovados', sub:'CONT.SE / COUNTIF',
+      def:'CONT.SE conta quantas células de um intervalo atendem a um critério específico. Essencial para gerar estatísticas de turma automaticamente: quantos aprovados, quantos em recuperação etc.',
+      ex:'O professor Henrique usa =CONT.SE(F2:F36,"Aprovado") para saber instantaneamente quantos dos 35 alunos estão aprovados. Ele criou um painel com 3 fórmulas que atualizam em tempo real conforme lança as notas.',
+      pr:'Crie fórmulas CONT.SE para contar: 1) Alunos aprovados, 2) Em recuperação, 3) Reprovados. As situações estão na coluna F, linhas 2 a <span class="mv">[X]</span>. Mostre também a porcentagem de cada grupo.',
+      tip:'Combine CONT.SE com COUNTA para calcular percentual: =CONT.SE(F2:F36,"Aprovado")/COUNTA(F2:F36)*100 — você terá a porcentagem de aprovação.' },
+    { icon:'📈', title:'Média da Turma', sub:'MÉDIA / AVERAGE',
+      def:'A função MÉDIA calcula a média aritmética simples de um intervalo de células. Essencial para acompanhar o desempenho geral da turma bimestre a bimestre.',
+      ex:'A coordenadora Rosa usa =MÉDIA(E2:E36) para ver a média de cada turma. Ela criou uma planilha comparativa com as médias de todas as turmas por bimestre — identificando padrões e turmas que precisam de atenção.',
+      pr:'Crie uma planilha de acompanhamento com: médias por turma (4 bimestres), variação entre bimestres e destaque automático para turmas com queda. As médias de cada turma estão nas linhas <span class="mv">[X a Y]</span>.',
+      tip:'Para comparar bimestres, use gráfico de linhas: selecione as médias de cada bimestre, insira gráfico de linha — a evolução fica visual e fácil de apresentar em reuniões pedagógicas.' },
+  ];
+  formCards.forEach((el,i)=>{ if(formData[i]) regCard(el, formData[i]); });
+
+  // SLIDE 7 — Outros usos
+  const uaCards = document.querySelectorAll('.ua');
+  const uaData = [
+    { icon:'📈', title:'Análise de Desempenho', sub:'Sem precisar de Excel',
+      def:'Cole qualquer tabela de notas no Claude (em texto simples) e peça análise em linguagem natural. Ele identifica padrões, alunos em risco, disciplinas problemáticas e sugere intervenções — sem precisar abrir Excel.',
+      ex:'O professor Maurício cola as notas do 3º bimestre no chat do Claude e pergunta: "algum aluno teve queda de mais de 2 pontos em relação ao bimestre anterior?" Em 10 segundos tem a lista com os nomes (fictícios) e a diferença de cada um.',
+      pr:'Analise esta tabela de notas (copie e cole no chat): <span class="mv">[notas]</span>. Responda: 1) Quantos alunos estão em risco? 2) Qual disciplina teve pior desempenho? 3) Algum aluno apresentou queda acentuada? 4) Sugira 3 ações de intervenção.',
+      tip:'Use nomes genéricos nas notas: "A1, A2, A3" em vez de nomes reais. O Claude analisa os números sem precisar identificar os alunos.' },
+    { icon:'📋', title:'Lista de Chamada', sub:'Formatada e pronta para usar',
+      def:'O Claude cria tabelas de chamada formatadas com colunas por aula ou data, codificação de presença/falta e fórmulas para calcular frequência automaticamente — prontas para copiar no Google Sheets.',
+      ex:'A professora Fátima pede: "crie uma lista de chamada para 32 alunos, 20 aulas, com colunas P (presente), F (falta) e J (justificada), mais fórmula de percentual de frequência". Recebe a estrutura formatada em 1 minuto.',
+      pr:'Crie uma estrutura de lista de chamada para <span class="mv">[número]</span> alunos e <span class="mv">[número]</span> aulas. Colunas: P (presente), F (falta), J (justificada). Inclua: fórmula de total de faltas e percentual de frequência. Para Google Sheets.',
+      tip:'Cole a estrutura gerada diretamente no Google Sheets usando Ctrl+V — ele reconhece automaticamente as colunas separadas por tabulação.' },
+    { icon:'📊', title:'Gráficos de Desempenho', sub:'Orientação para criar',
+      def:'O Claude orienta qual tipo de gráfico usar para cada situação e explica passo a passo como criar no Excel ou Google Sheets — sem precisar saber de antemão qual gráfico é o ideal.',
+      ex:'O professor Celso quer apresentar a evolução das notas por bimestre na reunião de pais. Pede ao Claude: "qual gráfico usar para mostrar a evolução de notas de 3 turmas ao longo de 4 bimestres?" — Claude recomenda gráfico de linhas e explica como criar.',
+      pr:'Tenho dados de <span class="mv">[descreva os dados]</span>. Qual tipo de gráfico seria mais adequado para visualizar <span class="mv">[o que quero mostrar]</span>? Explique o passo a passo para criar no <span class="mv">[Excel/Google Sheets]</span>.',
+      tip:'Diga ao Claude para que será usada a visualização: "reunião com pais", "relatório para a coordenação" ou "análise própria" — ele adapta a complexidade do gráfico.' },
+  ];
+  uaCards.forEach((el,i)=>{ if(uaData[i]) regCard(el, uaData[i]); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+});
+</script>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon-title">
+        <div class="modal-icon" id="mIcon">📌</div>
+        <div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
