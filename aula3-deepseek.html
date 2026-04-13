@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 3 — DeepSeek · IA na Sala de Aula com Alunos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ds-cyan: #00e5ff;
+  --ds-blue: #0066cc;
+  --ds-green: #00c896;
+  --ds-dark: #080f1a;
+  --ds-mid: #0d1e30;
+  --ds-card: #0f2236;
+  --white: #ffffff;
+  --muted: rgba(255,255,255,0.5);
+}
+body { font-family: 'Space Grotesk', sans-serif; background: var(--ds-dark); color: var(--white); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.slides { flex: 1; position: relative; overflow: hidden; }
+.slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; opacity: 0; transform: scale(0.97); transition: opacity 0.4s ease, transform 0.4s ease; pointer-events: none; }
+.slide::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(0,229,255,0.06) 0%, transparent 70%); pointer-events: none; }
+.slide.active { opacity: 1; transform: scale(1); pointer-events: all; }
+.slide.exit { opacity: 0; transform: scale(1.03); }
+.progress { height: 2px; background: rgba(255,255,255,0.05); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--ds-blue), var(--ds-cyan), var(--ds-green)); transition: width 0.4s ease; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 2rem; background: rgba(255,255,255,0.02); border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+.nav-info .nav-course { font-size: 0.68rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.1rem; }
+.nav-info .nav-title { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+.nav-controls { display: flex; align-items: center; gap: 0.8rem; }
+.nav-counter { font-size: 0.78rem; color: rgba(255,255,255,0.3); font-family: 'Space Mono', monospace; }
+.btn { background: rgba(0,229,255,0.07); border: 1px solid rgba(0,229,255,0.15); color: white; padding: 0.45rem 1.1rem; border-radius: 5px; font-family: 'Space Grotesk', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+.btn:hover { background: rgba(0,229,255,0.15); border-color: var(--ds-cyan); }
+.btn:disabled { opacity: 0.25; cursor: default; }
+.kbd-hint { position: fixed; bottom: 4.5rem; right: 1.5rem; font-size: 0.68rem; color: rgba(255,255,255,0.13); font-family: 'Space Mono', monospace; }
+
+.slide-label { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--ds-cyan); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.7rem; }
+.slide-h2 { font-size: clamp(1.5rem, 3.5vw, 2.3rem); font-weight: 700; margin-bottom: 1.4rem; line-height: 1.2; }
+.body-text { font-size: 0.92rem; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; }
+
+/* CAPA */
+.s-cover { text-align: center; }
+.ds-logo { width: 72px; height: 72px; margin: 0 auto 1.8rem; }
+.cover-kicker { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: rgba(255,255,255,0.3); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+.cover-h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; line-height: 1.15; margin-bottom: 0.8rem; }
+.cover-h1 span { color: var(--ds-cyan); font-style: italic; font-weight: 400; }
+.cover-sub { font-size: 1rem; color: var(--muted); margin-bottom: 2.2rem; font-weight: 300; }
+.chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.chip { padding: 0.35rem 0.9rem; border-radius: 4px; font-size: 0.75rem; border: 1px solid; font-family: 'Space Mono', monospace; }
+.chip-c { border-color: var(--ds-cyan); color: var(--ds-cyan); background: rgba(0,229,255,0.07); }
+.chip-g { border-color: var(--ds-green); color: var(--ds-green); background: rgba(0,200,150,0.07); }
+
+/* AGENDA */
+.agenda-list { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; max-width: 740px; }
+.ar { display: grid; grid-template-columns: 72px 1fr; gap: 1rem; background: var(--ds-card); border: 1px solid rgba(0,229,255,0.08); border-radius: 8px; padding: 0.9rem 1.1rem; align-items: center; }
+.at { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--ds-cyan); }
+.ad { font-size: 0.88rem; color: rgba(255,255,255,0.8); }
+
+/* WHAT IS DEEPSEEK */
+.ds-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 840px; }
+.ds-card { background: var(--ds-card); border: 1px solid rgba(0,229,255,0.1); border-radius: 12px; padding: 1.3rem; }
+.ds-card .dci { font-size: 1.7rem; margin-bottom: 0.7rem; }
+.ds-card h3 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.4rem; }
+.ds-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.info-box { background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.15); border-radius: 8px; padding: 0.9rem 1.1rem; font-size: 0.87rem; color: rgba(255,255,255,0.7); line-height: 1.5; margin-top: 1rem; width: 100%; max-width: 840px; }
+
+/* PROMPT */
+.prompt-wrap { width: 100%; max-width: 820px; }
+.prompt-box { background: #040c18; border: 1px solid rgba(0,229,255,0.2); border-radius: 12px; overflow: hidden; margin-top: 1.2rem; }
+.pb-bar { background: rgba(0,229,255,0.06); padding: 0.55rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-bottom: 1px solid rgba(0,229,255,0.1); }
+.pb-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pb-label { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: rgba(255,255,255,0.25); margin-left: auto; }
+.pb-code { padding: 1.2rem 1.4rem; font-family: 'Space Mono', monospace; font-size: 0.8rem; line-height: 1.9; color: rgba(255,255,255,0.78); }
+.pc-var { color: #ffd54f; background: rgba(255,213,79,0.07); padding: 0 0.15rem; }
+.pc-key { color: var(--ds-cyan); }
+.pc-cm { color: rgba(255,255,255,0.25); }
+.tip-bar { background: rgba(0,200,150,0.06); border-top: 1px solid rgba(0,200,150,0.12); padding: 0.65rem 1.1rem; font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+/* USOS COM ALUNOS */
+.ua-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 860px; }
+.ua-card { background: var(--ds-card); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.2rem; }
+.ua-icon { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.ua-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+.ua-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+.ua-prompt { margin-top: 0.7rem; background: rgba(0,0,0,0.4); border-radius: 5px; padding: 0.5rem 0.7rem; font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--ds-cyan); line-height: 1.5; }
+
+/* MEDIACAO */
+.mediacao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%; max-width: 860px; align-items: start; }
+.mlist { display: flex; flex-direction: column; gap: 0.7rem; }
+.mrow { display: flex; gap: 0.8rem; align-items: flex-start; background: var(--ds-card); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 0.9rem 1rem; }
+.micon { font-size: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; }
+.mtext { font-size: 0.84rem; color: rgba(255,255,255,0.75); line-height: 1.4; }
+.mtext strong { color: white; display: block; font-size: 0.87rem; }
+
+/* DEBATE CARD */
+.debate-box { background: var(--ds-card); border: 1px solid rgba(0,229,255,0.1); border-radius: 12px; padding: 1.4rem; }
+.debate-box h3 { font-size: 0.9rem; font-weight: 600; color: var(--ds-cyan); margin-bottom: 1rem; font-family: 'Space Mono', monospace; letter-spacing: 0.06em; }
+.debate-q { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.6; margin-bottom: 0.7rem; padding-left: 0.8rem; border-left: 2px solid var(--ds-cyan); }
+
+/* ETICA */
+.etica-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 840px; margin-top: 1.5rem; }
+.ec { border-radius: 12px; padding: 1.2rem; font-size: 0.85rem; }
+.ec-ok { background: rgba(0,200,150,0.07); border: 1px solid rgba(0,200,150,0.18); }
+.ec-no { background: rgba(255,80,80,0.07); border: 1px solid rgba(255,80,80,0.18); }
+.ec-title { font-weight: 700; font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.7rem; font-family: 'Space Mono', monospace; }
+.ec-ok .ec-title { color: var(--ds-green); }
+.ec-no .ec-title { color: #ff8080; }
+.ec ul { padding-left: 1rem; }
+.ec li { margin-bottom: 0.4rem; color: rgba(255,255,255,0.7); }
+
+/* ATIVIDADE */
+.ativ-box { background: linear-gradient(135deg, rgba(0,102,204,0.15), rgba(0,229,255,0.07)); border: 1px solid rgba(0,229,255,0.2); border-radius: 14px; padding: 1.8rem; width: 100%; max-width: 760px; margin-top: 1.5rem; }
+.ativ-steps { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.ativ-steps li { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.87rem; color: rgba(255,255,255,0.8); line-height: 1.5; }
+.sb { width: 24px; height: 24px; border-radius: 4px; background: linear-gradient(135deg, var(--ds-blue), var(--ds-cyan)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; font-family: 'Space Mono', monospace; }
+
+/* ENCERRA */
+.s-encerra { text-align: center; }
+.enc-big { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 700; line-height: 1.2; margin-bottom: 1rem; }
+.enc-big span { color: var(--ds-cyan); font-style: italic; font-weight: 400; }
+.enc-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.6; }
+.nc { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.78rem; color: rgba(255,255,255,0.5); display: inline-block; margin: 0.3rem; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  body { height: auto; overflow-y: auto; }
+  .slides { flex: none; height: auto; overflow: visible; position: static; }
+  .slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: none;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 80svh;
+    justify-content: flex-start;
+    padding-top: 1.8rem;
+  }
+  .slide.active { display: flex; }
+  .slide::before { display: none; }
+  .progress { position: sticky; top: 0; z-index: 10; }
+  .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.7rem 1rem; }
+  .nav-info { width: 100%; }
+  .nav-controls { width: 100%; justify-content: flex-end; }
+  .kbd-hint { display: none; }
+  .slide-label { font-size: 0.65rem; }
+  .slide-h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .agenda-list { gap: 0.5rem; }
+  .ar { grid-template-columns: 60px 1fr; gap: 0.6rem; padding: 0.7rem 0.9rem; }
+  .ds-card-grid { grid-template-columns: 1fr; }
+  .ua-grid { grid-template-columns: 1fr; }
+  .mediacao-grid { grid-template-columns: 1fr; }
+  .etica-grid { grid-template-columns: 1fr; }
+  .prompt-wrap { width: 100%; }
+  .pb-code { font-size: 0.74rem; padding: 1rem; }
+  .ativ-box { padding: 1.2rem; }
+  .ativ-steps li { font-size: 0.83rem; }
+  .enc-big { font-size: 1.5rem; }
+  .cover-h1 { font-size: 1.8rem; }
+  .ds-logo { width: 54px; height: 54px; }
+  .info-box { font-size: 0.82rem; }
+}
+
+
+.info-card { cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; position: relative; }
+.info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.info-card-hint { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.3; margin-top: 0.6rem; display: block; font-family:'Space Mono',monospace; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 1.2rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #060f18; border: 1px solid rgba(0,229,255,0.2); border-radius: 14px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: mIn 0.28s ease; }
+@keyframes mIn { from { opacity:0; transform: scale(0.94) translateY(14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.3rem 1.4rem 0.9rem; border-bottom: 1px solid rgba(0,229,255,0.1); gap: 0.8rem; }
+.modal-icon-title { display: flex; align-items: center; gap: 0.8rem; }
+.modal-icon { font-size: 2rem; flex-shrink: 0; }
+.modal-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; font-family:'Space Grotesk',sans-serif; }
+.modal-sub { font-size: 0.7rem; opacity: 0.35; margin-top: 0.2rem; font-family:'Space Mono',monospace; }
+.modal-close { background: rgba(0,229,255,0.07); border: 1px solid rgba(0,229,255,0.15); color: white; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-close:hover { background: rgba(0,229,255,0.15); }
+.modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-lbl { font-family:'Space Mono',monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.14em; color: #00e5ff; font-weight: 600; margin-bottom: 0.3rem; }
+.modal-def { font-size: 0.87rem; line-height: 1.65; opacity: 0.82; }
+.modal-ex { background: rgba(0,229,255,0.05); border-left: 3px solid #00e5ff; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; font-size: 0.83rem; line-height: 1.6; opacity: 0.88; }
+.modal-prompt { background: rgba(0,0,0,0.6); border: 1px solid rgba(0,229,255,0.1); border-radius: 8px; padding: 0.85rem 1rem; font-family: 'Space Mono',monospace; font-size: 0.75rem; line-height: 1.8; color: rgba(255,255,255,0.7); }
+.modal-prompt .mv { color: #ffd54f; background: rgba(255,213,79,0.08); padding: 0 0.15rem; }
+.modal-tip { font-size: 0.79rem; opacity: 0.45; line-height: 1.5; }
+@media (max-width: 600px) { .modal-box { max-height: 92vh; } .modal-header,.modal-body { padding-left: 1rem; padding-right: 1rem; } }
+
+</style>
+</head>
+<body>
+<div class="slides">
+
+  <!-- SLIDE 1: CAPA -->
+  <div class="slide s-cover active" id="s1">
+    <div class="ds-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="dg1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0066cc"/><stop offset="100%" stop-color="#00e5ff"/></linearGradient></defs>
+        <rect width="100" height="100" rx="20" fill="url(#dg1)" opacity="0.15" stroke="url(#dg1)" stroke-width="1.5"/>
+        <path d="M20 35 Q50 15 80 35 L80 65 Q50 85 20 65 Z" stroke="url(#dg1)" stroke-width="2" fill="none" opacity="0.6"/>
+        <circle cx="50" cy="50" r="14" fill="url(#dg1)" opacity="0.9"/>
+        <circle cx="50" cy="50" r="6" fill="white" opacity="0.9"/>
+        <circle cx="30" cy="42" r="4" fill="#00e5ff" opacity="0.6"/>
+        <circle cx="70" cy="42" r="4" fill="#00e5ff" opacity="0.6"/>
+        <circle cx="30" cy="58" r="4" fill="#00c896" opacity="0.5"/>
+        <circle cx="70" cy="58" r="4" fill="#00c896" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="cover-kicker">Curso IA para Professores · Aula 3 de 5</div>
+    <h1 class="cover-h1">IA <span>na Sala de Aula</span><br>com Alunos</h1>
+    <div class="cover-sub">Usando o DeepSeek para mediar aprendizagem e engajar estudantes</div>
+    <div class="chips">
+      <span class="chip chip-c">⏱ 1 hora</span>
+      <span class="chip chip-g">🔍 Powered by DeepSeek</span>
+      <span class="chip chip-c">💻 Online / EAD</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide" id="s2">
+    <div style="width:100%;max-width:740px">
+      <div class="slide-label">// agenda_da_aula</div>
+      <h2 class="slide-h2">O que vamos fazer hoje?</h2>
+      <div class="agenda-list">
+        <div class="ar"><div class="at">0–10</div><div class="ad">Apresentação do DeepSeek e como ele se diferencia</div></div>
+        <div class="ar"><div class="at">10–22</div><div class="ad">IA como ferramenta de pesquisa mediada pelo professor</div></div>
+        <div class="ar"><div class="at">22–38</div><div class="ad">Atividades com IA: questionamentos, debates e tutoria</div></div>
+        <div class="ar"><div class="at">38–50</div><div class="ad">Ética no uso de IA pelos alunos — como orientar</div></div>
+        <div class="ar"><div class="at">50–60</div><div class="ad">Atividade prática e encerramento</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: O QUE É DEEPSEEK -->
+  <div class="slide" id="s3">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">// ferramenta_da_aula</div>
+      <h2 class="slide-h2">O que é o DeepSeek?</h2>
+      <div class="ds-card-grid">
+        <div class="ds-card"><div class="dci">🇨🇳</div><h3>Modelo chinês de código aberto</h3><p>Desenvolvido pela DeepSeek AI — ganhou destaque global por desempenho comparável ao GPT-4 a custo muito menor.</p></div>
+        <div class="ds-card"><div class="dci">🔍</div><h3>Excelente em raciocínio</h3><p>Especialmente forte em matemática, lógica, ciências e análise de textos — ideal para apoio pedagógico.</p></div>
+        <div class="ds-card"><div class="dci">🆓</div><h3>Gratuito e acessível</h3><p>Disponível em chat.deepseek.com sem cadastro obrigatório, funciona no celular e no computador.</p></div>
+        <div class="ds-card"><div class="dci">🎓</div><h3>Bom para tutoria</h3><p>Explica conceitos passo a passo, responde perguntas dos alunos e adapta a linguagem ao nível pedido.</p></div>
+      </div>
+      <div class="info-box">⚠️ Atenção: o DeepSeek é uma empresa chinesa. Para uso com alunos menores, não insira dados pessoais. Use com supervisão do professor.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: ACESSO -->
+  <div class="slide" id="s4">
+    <div style="width:100%;max-width:780px">
+      <div class="slide-label">// como_acessar</div>
+      <h2 class="slide-h2">Como alunos e professores acessam</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
+        <div class="ds-card" style="border-color:rgba(0,229,255,0.2)">
+          <div class="dci">👩‍🏫</div>
+          <h3>Para o professor</h3>
+          <p style="margin-bottom:0.8rem">Use para preparar perguntas-guia, roteiros de discussão e exemplos de uso antes da aula.</p>
+          <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--ds-cyan);background:rgba(0,0,0,0.3);padding:0.5rem 0.7rem;border-radius:5px">chat.deepseek.com</div>
+        </div>
+        <div class="ds-card" style="border-color:rgba(0,200,150,0.2)">
+          <div class="dci">👩‍🎓</div>
+          <h3>Para os alunos</h3>
+          <p style="margin-bottom:0.8rem">Use em atividades supervisionadas como ferramenta de pesquisa e apoio à resolução de problemas.</p>
+          <div style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--ds-green);background:rgba(0,0,0,0.3);padding:0.5rem 0.7rem;border-radius:5px">Sem login necessário</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: PROMPT MEDIADO -->
+  <div class="slide" id="s5">
+    <div class="prompt-wrap">
+      <div class="slide-label">// prompt_mediado</div>
+      <h2 class="slide-h2">IA como ferramenta de pesquisa em sala</h2>
+      <div class="prompt-box">
+        <div class="pb-bar">
+          <div class="pb-dot" style="background:#ff5f56"></div>
+          <div class="pb-dot" style="background:#ffbd2e"></div>
+          <div class="pb-dot" style="background:#27c93f"></div>
+          <span class="pb-label">DeepSeek · Prompt do aluno (com orientação do professor)</span>
+        </div>
+        <div class="pb-code">
+          <span class="pc-cm">// O professor projeta este prompt e os alunos enviam para o DeepSeek</span><br><br>
+          Explique <span class="pc-var">[conceito ou tema]</span> de forma simples,<br>
+          como se eu fosse um aluno do <span class="pc-var">[ano/série]</span>.<br><br>
+          <span class="pc-key">Inclua:</span><br>
+          - Uma definição clara em 2-3 frases<br>
+          - Um exemplo do cotidiano brasileiro<br>
+          - Uma pergunta para eu pensar mais sobre o assunto<br><br>
+          <span class="pc-cm">// Depois o professor conduz a discussão baseada nas respostas</span>
+        </div>
+        <div class="tip-bar">💡 Os alunos comparam as respostas recebidas e discutem as diferenças com o professor.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: USOS EM AULA -->
+  <div class="slide" id="s6">
+    <div style="width:100%;max-width:860px">
+      <div class="slide-label">// aplicações_pedagógicas</div>
+      <h2 class="slide-h2">Como usar o DeepSeek com alunos</h2>
+      <div class="ua-grid">
+        <div class="ua-card">
+          <div class="ua-icon">🔍</div>
+          <h3>Pesquisa Orientada</h3>
+          <p>Alunos pesquisam um tema e apresentam ao professor o que a IA respondeu, discutindo a confiabilidade.</p>
+          <div class="ua-prompt">"Explique [tema] e cite 2 fontes que posso verificar"</div>
+        </div>
+        <div class="ua-card">
+          <div class="ua-icon">🧠</div>
+          <h3>Tutor de Dúvidas</h3>
+          <p>Alunos com dúvidas de exercícios pedem ao DeepSeek uma explicação passo a passo.</p>
+          <div class="ua-prompt">"Me explique como resolver este problema: [exercício]"</div>
+        </div>
+        <div class="ua-card">
+          <div class="ua-icon">💬</div>
+          <h3>Debate com IA</h3>
+          <p>A turma pede à IA dois pontos de vista sobre um tema e debate qual argumento é mais convincente.</p>
+          <div class="ua-prompt">"Dê 2 pontos de vista sobre [tema controverso]"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: MEDIAÇÃO -->
+  <div class="slide" id="s7">
+    <div style="width:100%;max-width:860px">
+      <div class="slide-label">// papel_do_professor</div>
+      <h2 class="slide-h2">O professor como mediador</h2>
+      <div class="mediacao-grid">
+        <div class="mlist">
+          <div class="mrow"><div class="micon">🎯</div><div class="mtext"><strong>Defina o objetivo antes</strong>Diga aos alunos o que fazer com a resposta da IA — não apenas recebê-la.</div></div>
+          <div class="mrow"><div class="micon">🔎</div><div class="mtext"><strong>Questione a resposta</strong>Pergunte: "A IA acertou? Como você verificaria?"</div></div>
+          <div class="mrow"><div class="micon">⚖️</div><div class="mtext"><strong>Compare fontes</strong>Peça que comparem a resposta da IA com o livro didático.</div></div>
+          <div class="mrow"><div class="micon">💡</div><div class="mtext"><strong>Use o erro a favor</strong>Quando a IA errar, é uma oportunidade de ensino valiosa.</div></div>
+        </div>
+        <div class="debate-box">
+          <h3>// perguntas de mediação</h3>
+          <div class="debate-q">Esta resposta faz sentido com o que estudamos?</div>
+          <div class="debate-q">O que está faltando nessa explicação?</div>
+          <div class="debate-q">Você consegue dar um exemplo melhor que o da IA?</div>
+          <div class="debate-q">Como você reescreveria essa resposta com suas palavras?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: ÉTICA -->
+  <div class="slide" id="s8">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">// uso_ético</div>
+      <h2 class="slide-h2">Orientando alunos sobre ética no uso da IA</h2>
+      <div class="etica-grid">
+        <div class="ec ec-ok">
+          <div class="ec-title">✔ Uso ético</div>
+          <ul>
+            <li>Usar a IA para entender, não para copiar</li>
+            <li>Citar quando uma ideia veio da IA</li>
+            <li>Verificar as informações em outras fontes</li>
+            <li>Usar como apoio, não como substituto do estudo</li>
+            <li>Perguntar ao professor quando não entender</li>
+          </ul>
+        </div>
+        <div class="ec ec-no">
+          <div class="ec-title">✖ Problemas comuns</div>
+          <ul>
+            <li>Entregar trabalho gerado pela IA como próprio</li>
+            <li>Copiar sem entender o conteúdo</li>
+            <li>Acreditar em tudo que a IA diz</li>
+            <li>Usar a IA no lugar de pesquisar</li>
+            <li>Compartilhar dados pessoais com a IA</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: ATIVIDADE -->
+  <div class="slide" id="s9">
+    <div style="width:100%;max-width:760px">
+      <div class="slide-label">// atividade_prática</div>
+      <h2 class="slide-h2">Atividade: IA como tutor da turma</h2>
+      <div class="ativ-box">
+        <ol class="ativ-steps">
+          <li><div class="sb">01</div>Abra o DeepSeek em chat.deepseek.com (sem login necessário).</li>
+          <li><div class="sb">02</div>Escolha um conteúdo que sua turma tem dificuldade.</li>
+          <li><div class="sb">03</div>Use o prompt mediado desta aula para pedir uma explicação.</li>
+          <li><div class="sb">04</div>Avalie a resposta: ela seria adequada para seus alunos? O que você mudaria?</li>
+          <li><div class="sb">05</div>Peça ao DeepSeek para refazer a explicação "de forma mais simples, com exemplo do futebol/culinária/cotidiano".</li>
+          <li><div class="sb">06</div>Planeje como usaria essa atividade com uma turma real.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: COMPARATIVO -->
+  <div class="slide" id="s10">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">// deepseek_vs_outros</div>
+      <h2 class="slide-h2">Por que usar o DeepSeek com alunos?</h2>
+      <div style="display:flex;flex-direction:column;gap:0.7rem;margin-top:1.5rem">
+        <div class="ar" style="border-color:rgba(0,229,255,0.12)"><div style="font-size:1.3rem">✅</div><div class="ad"><strong>Sem cadastro obrigatório</strong> — alunos acessam sem criar conta ou dar dados pessoais.</div></div>
+        <div class="ar" style="border-color:rgba(0,229,255,0.12)"><div style="font-size:1.3rem">🧮</div><div class="ad"><strong>Forte em exatas</strong> — resolve problemas de matemática passo a passo, excelente para apoio.</div></div>
+        <div class="ar" style="border-color:rgba(0,229,255,0.12)"><div style="font-size:1.3rem">📱</div><div class="ad"><strong>Funciona no celular</strong> — ideal para escolas onde o acesso é pelo smartphone dos alunos.</div></div>
+        <div class="ar" style="border-color:rgba(0,200,150,0.15)"><div style="font-size:1.3rem">⚠️</div><div class="ad"><strong>Limitação:</strong> não acessa a internet em tempo real. Para pesquisas com dados atuais, prefira o Gemini.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: LIMITAÇÕES -->
+  <div class="slide" id="s11">
+    <div style="width:100%;max-width:800px">
+      <div class="slide-label">// limitações</div>
+      <h2 class="slide-h2">O que o professor precisa saber</h2>
+      <div style="display:flex;flex-direction:column;gap:0.8rem;margin-top:1.5rem">
+        <div class="ar"><div style="font-size:1.3rem">🌐</div><div class="ad"><strong>Servidor chinês</strong> — os dados enviados ficam fora do Brasil. Não use com informações sensíveis.</div></div>
+        <div class="ar"><div style="font-size:1.3rem">📅</div><div class="ad"><strong>Dados desatualizados</strong> — o modelo tem uma data de corte. Para eventos recentes, verifique outra fonte.</div></div>
+        <div class="ar"><div style="font-size:1.3rem">🎓</div><div class="ad"><strong>Não substitui o professor</strong> — a IA não percebe emoções, dificuldades individuais ou contexto social dos alunos.</div></div>
+        <div class="ar"><div style="font-size:1.3rem">✍️</div><div class="ad"><strong>Cuidado com plágio</strong> — estabeleça regras claras de uso antes de liberar para os alunos.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ENCERRAMENTO -->
+  <div class="slide s-encerra" id="s12">
+    <div class="slide-label">// aula_3_concluída</div>
+    <div class="enc-big">A IA não ensina.<br><span>O professor que ensina</span><br>com a IA.</div>
+    <p class="enc-sub">Na próxima aula: <strong>NotebookLM</strong> para criar apresentações<br>e mapas conceituais diretamente dos seus materiais.</p>
+    <div>
+      <span class="nc">🗺 Mapas conceituais</span>
+      <span class="nc">📊 Slides automáticos</span>
+      <span class="nc">🎧 Podcasts de conteúdo</span>
+    </div>
+  </div>
+
+</div>
+<div class="progress"><div class="progress-fill" id="progressFill" style="width:8.33%"></div></div>
+<div class="nav">
+  <div class="nav-info">
+    <div class="nav-course">Curso IA para Professores</div>
+    <div class="nav-title">Aula 3 · IA na Sala de Aula com Alunos · DeepSeek</div>
+  </div>
+  <div class="nav-controls">
+    <span class="nav-counter" id="counter">1 / 12</span>
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+  </div>
+</div>
+<div class="kbd-hint">← →</div>
+<script>
+let current = 0; const total = 12;
+function changeSlide(dir) {
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active'); slides[current].classList.add('exit');
+  setTimeout(() => slides[current].classList.remove('exit'), 400);
+  current = Math.max(0, Math.min(total - 1, current + dir));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / total) * 100}%`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const _MD={};
+function regCard(el,d){
+  el.classList.add('info-card');
+  const id='c'+Math.random().toString(36).slice(2,7);
+  _MD[id]=d; el.dataset.mid=id;
+  el.addEventListener('click',()=>openModal(id));
+  const h=document.createElement('span');
+  h.className='info-card-hint'; h.textContent='// clique para detalhes';
+  el.appendChild(h);
+}
+function openModal(id){
+  const d=_MD[id]; if(!d) return;
+  document.getElementById('mIcon').textContent=d.icon||'📌';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub||'';
+  let h='';
+  if(d.def) h+=`<div><div class="modal-lbl">// o_que_é</div><div class="modal-def">${d.def}</div></div>`;
+  if(d.ex)  h+=`<div><div class="modal-lbl">// exemplo_real</div><div class="modal-ex">${d.ex}</div></div>`;
+  if(d.pr)  h+=`<div><div class="modal-lbl">// prompt_pronto</div><div class="modal-prompt">${d.pr}</div></div>`;
+  if(d.tip) h+=`<div class="modal-tip">💡 ${d.tip}</div>`;
+  document.getElementById('mBody').innerHTML=h;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // SLIDE 3 — Features DeepSeek
+  const dsCards = document.querySelectorAll('.ds-card');
+  const dsData = [
+    { icon:'🇨🇳', title:'Modelo de código aberto', sub:'DeepSeek AI',
+      def:'O DeepSeek foi desenvolvido pela empresa chinesa DeepSeek AI e lançado como modelo de código aberto, o que significa que qualquer pesquisador pode estudar e adaptar seu código. Ele surpreendeu o mercado com desempenho comparável ao GPT-4 a uma fração do custo.',
+      ex:'O professor de Física Daniel usa o DeepSeek para resolver problemas complexos de cálculo passo a passo. Ao contrário de outras IAs, o DeepSeek mostra todo o raciocínio intermediário antes de chegar à resposta — ótimo para modelar o processo de resolução para os alunos.',
+      pr:'Resolva este problema de <span class="mv">[disciplina]</span> mostrando todos os passos do raciocínio, como se estivesse ensinando um aluno do <span class="mv">[ano]</span>: <span class="mv">[problema]</span>.',
+      tip:'O modo "DeepThink (R1)" mostra o raciocínio interno do modelo — ative para problemas mais complexos que precisam de lógica encadeada.' },
+    { icon:'🔍', title:'Excelente em raciocínio', sub:'Matemática e ciências',
+      def:'O DeepSeek R1 é especialmente forte em tarefas que exigem raciocínio lógico e matemático: resolução de equações, provas, demonstrações geométricas, análise de dados e interpretação científica.',
+      ex:'A professora de Matemática Cristina pede ao DeepSeek que resolva uma equação do 2º grau explicando cada etapa com linguagem de 8º ano. O DeepSeek não só resolve como antecipa os erros mais comuns que os alunos cometem naquela etapa.',
+      pr:'Resolva <span class="mv">[problema matemático]</span> para um aluno do <span class="mv">[ano]</span>. Mostre: 1) O passo a passo completo, 2) A justificativa de cada etapa, 3) Os erros mais comuns nesse tipo de problema e como evitá-los.',
+      tip:'Para verificar se uma solução do livro está correta, cole o enunciado e a resolução e peça: "verifique se esta resolução está correta e identifique eventuais erros".' },
+    { icon:'🆓', title:'Gratuito e sem login', sub:'chat.deepseek.com',
+      def:'O DeepSeek pode ser acessado em chat.deepseek.com sem necessidade de criar conta ou fornecer dados pessoais. Isso é importante para uso com alunos menores, que não precisam se cadastrar.',
+      ex:'A professora Andréa planeja uma atividade de pesquisa mediada com os alunos do 9º ano. Ela projeta o DeepSeek no telão, os alunos sugerem perguntas e ela digita — sem precisar que nenhum aluno crie conta.',
+      pr:'',
+      tip:'Mesmo sem conta, o DeepSeek funciona totalmente. Com conta gratuita, você tem histórico de conversas salvo — útil para retomar atividades.' },
+    { icon:'🎓', title:'Bom para tutoria', sub:'Explica passo a passo',
+      def:'O DeepSeek adapta o nível de linguagem conforme o pedido, explicando conceitos de forma progressiva — do mais simples ao mais complexo. É como ter um tutor paciente disponível 24 horas.',
+      ex:'O aluno Pedro, do 7º ano, tem dificuldade em frações. Em casa, ele usa o DeepSeek pelo celular e pede: "explica fração para mim como se eu tivesse 12 anos e nunca tivesse visto isso". O DeepSeek usa exemplos de pizza e chocolate para construir o conceito.',
+      pr:'Explique <span class="mv">[conceito]</span> para um aluno de <span class="mv">[X]</span> anos que nunca viu este assunto. Use: 1) Uma analogia do cotidiano, 2) Um exemplo prático, 3) Uma pergunta para verificar se entendi.',
+      tip:'Incentive os alunos a dizer quando não entenderam: "não entendi a parte X, pode explicar de outra forma?" — o DeepSeek reexplica com uma abordagem diferente.' },
+  ];
+  dsCards.forEach((el,i)=>{ if(dsData[i]) regCard(el, dsData[i]); });
+
+  // SLIDE 6 — Usos com alunos
+  const uaCards = document.querySelectorAll('.ua-card');
+  const uaData = [
+    { icon:'🔍', title:'Pesquisa Orientada', sub:'Com verificação crítica',
+      def:'Em vez de pesquisar no Google sem critério, os alunos usam o DeepSeek para fazer perguntas específicas sobre um tema e depois verificam as informações em fontes confiáveis — desenvolvendo o pensamento crítico.',
+      ex:'A turma do 8º ano pesquisa sobre energia solar. Cada grupo usa o DeepSeek para responder uma pergunta específica sobre o tema. Depois, o professor pede que verifiquem as informações no site da ANEEL e relatem discrepâncias.',
+      pr:'Explique <span class="mv">[tema]</span> em 3 parágrafos para alunos do <span class="mv">[ano]</span>. Ao final, cite 2 fontes confiáveis onde posso verificar essas informações (sites governamentais, universidades ou revistas científicas).',
+      tip:'Ensine os alunos a perguntar ao DeepSeek: "como eu poderia verificar se esta informação é verdadeira?" — isso desenvolve habilidades de pesquisa.' },
+    { icon:'🧠', title:'Tutor de Dúvidas', sub:'Apoio fora do horário de aula',
+      def:'Os alunos podem usar o DeepSeek como tutor pessoal para tirar dúvidas de exercícios, pedir explicações alternativas de conteúdos que não entenderam em aula e receber feedback sobre suas respostas.',
+      ex:'Lucas, do 9º ano, está fazendo o dever de casa de Química às 22h e não entende balanceamento de equações. Ele usa o DeepSeek pelo celular: cola a equação e pede que explique o passo a passo. Consegue resolver os outros exercícios sozinho.',
+      pr:'Estou com dificuldade neste exercício: <span class="mv">[cole o exercício]</span>. Não me dê a resposta diretamente. Faça perguntas que me ajudem a chegar na solução por conta própria. Sou aluno do <span class="mv">[ano]</span>.',
+      tip:'Configure o DeepSeek para não dar respostas diretas: peça que ele faça perguntas orientadoras em vez de resolver o problema — isso é mais pedagógico.' },
+    { icon:'💬', title:'Debate com IA', sub:'Argumentação e pensamento crítico',
+      def:'O professor usa o DeepSeek para gerar diferentes perspectivas sobre um tema controverso, e os alunos debatem qual argumento é mais convincente — desenvolvendo argumentação e pensamento crítico.',
+      ex:'A professora de Filosofia Marta pede ao DeepSeek 3 argumentos a favor e 3 contra o uso de celular na escola. Os alunos formam grupos, escolhem um lado e debatem usando os argumentos como base — depois questionam os argumentos gerados pela IA.',
+      pr:'Apresente <span class="mv">[número]</span> argumentos a favor E <span class="mv">[número]</span> contra <span class="mv">[tema controverso]</span>, adequados para alunos do <span class="mv">[ano]</span>. Seja equilibrado e baseie os argumentos em fatos verificáveis.',
+      tip:'Após o debate, peça ao DeepSeek para avaliar os argumentos usados pelos alunos — isso cria um feedback interessante sobre a qualidade da argumentação.' },
+  ];
+  uaCards.forEach((el,i)=>{ if(uaData[i]) regCard(el, uaData[i]); });
+
+  // SLIDE 7 — perguntas de mediação (debate-q)
+  const debs = document.querySelectorAll('.debate-q');
+  const debData = [
+    { icon:'🤔', title:'Esta resposta faz sentido?', sub:'Pensamento crítico',
+      def:'Questionar a validade da resposta da IA é o primeiro passo do pensamento crítico. Os alunos comparam a resposta com o que aprenderam e identificam incoerências.',
+      ex:'Turma do 7º ano: o DeepSeek explica o ciclo da água. O professor pergunta: "alguém viu algo diferente do que está no livro?" — um aluno percebe que a IA usou o termo "precipitação" de forma levemente diferente. Discussão valiosa sobre precisão científica.',
+      tip:'Crie o hábito: após cada resposta da IA, pergunte "quem concorda?" e "quem discorda?" antes de avançar.' },
+    { icon:'🧩', title:'O que está faltando?', sub:'Análise de completude',
+      def:'As respostas da IA são frequentemente precisas mas incompletas. Identificar o que falta desenvolve a capacidade analítica e o domínio do conteúdo pelos alunos.',
+      ex:'O DeepSeek explica a Revolução Francesa focando nas causas econômicas. O professor pergunta: "o que não foi mencionado?". Os alunos percebem que o contexto filosófico do Iluminismo foi ignorado — e o professor aprofunda esse ponto.',
+      tip:'Mantenha uma lista no quadro das "lacunas da IA" que a turma vai identificando ao longo das aulas — vira um registro de aprendizado.' },
+    { icon:'🌟', title:'Você tem um exemplo melhor?', sub:'Contextualização local',
+      def:'A IA tende a usar exemplos genéricos ou de outros países. Pedir que os alunos criem exemplos locais (da cidade, escola, bairro) aprofunda a compreensão e cria conexão com o conteúdo.',
+      ex:'O DeepSeek explica energia cinética com o exemplo de uma bola de boliche. O professor pergunta: "qual exemplo do nosso bairro seria melhor?". Os alunos sugerem: carros em lombadas, pipas, catadores de papel — todos mais significativos para eles.',
+      tip:'Desafio: "vocês conseguem criar um exemplo melhor que o da IA para explicar isso para um colega do 4º ano?"' },
+    { icon:'✍️', title:'Como você reescreveria?', sub:'Síntese e autoria',
+      def:'Reescrever a resposta da IA com as próprias palavras consolida o aprendizado e desenvolve a habilidade de síntese. É também uma forma de detectar se o aluno realmente entendeu o conteúdo.',
+      ex:'Após o DeepSeek explicar fotossíntese, o professor pede que cada aluno escreva uma explicação de 3 linhas com suas próprias palavras — sem olhar para a resposta da IA. Depois comparam as versões e discutem qual ficou mais clara.',
+      pr:'Leia esta explicação: <span class="mv">[resposta da IA]</span>. Agora reescreva com suas próprias palavras em no máximo 3 frases, como se estivesse explicando para um colega que nunca viu o assunto.',
+      tip:'Variação: peça que reescrevam como uma notícia de jornal, um post de Instagram ou uma mensagem de WhatsApp — formatos familiares aumentam o engajamento.' },
+  ];
+  debs.forEach((el,i)=>{ if(debData[i]) regCard(el, debData[i]); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+});
+</script>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon-title">
+        <div class="modal-icon" id="mIcon">📄</div>
+        <div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
