@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 4 — NotebookLM · Apresentações e Mapas Conceituais</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --nb-orange: #f5822a;
+  --nb-yellow: #f9c74f;
+  --nb-red: #e63946;
+  --nb-teal: #2ec4b6;
+  --bg: #0e0a06;
+  --card: #1a1208;
+  --border: rgba(245,130,42,0.15);
+  --white: #fdf6ec;
+  --muted: rgba(253,246,236,0.5);
+}
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--white); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.slides { flex: 1; position: relative; overflow: hidden; }
+.slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; opacity: 0; transform: translateX(50px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; }
+.slide::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 15% 50%, rgba(245,130,42,0.08) 0%, transparent 70%), radial-gradient(ellipse 40% 60% at 85% 20%, rgba(249,199,79,0.05) 0%, transparent 70%); pointer-events: none; }
+.slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+.slide.exit { opacity: 0; transform: translateX(-50px); }
+.progress { height: 3px; background: rgba(245,130,42,0.1); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--nb-red), var(--nb-orange), var(--nb-yellow)); transition: width 0.4s ease; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 2rem; background: rgba(245,130,42,0.03); border-top: 1px solid rgba(245,130,42,0.1); flex-shrink: 0; }
+.nav-course { font-size: 0.68rem; color: rgba(253,246,236,0.3); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 0.1rem; }
+.nav-title { font-size: 0.82rem; color: rgba(253,246,236,0.6); font-weight: 500; }
+.nav-controls { display: flex; align-items: center; gap: 0.8rem; }
+.nav-counter { font-size: 0.78rem; color: rgba(253,246,236,0.3); }
+.btn { background: rgba(245,130,42,0.08); border: 1px solid rgba(245,130,42,0.2); color: var(--white); padding: 0.45rem 1.1rem; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+.btn:hover { background: rgba(245,130,42,0.18); border-color: var(--nb-orange); }
+.btn:disabled { opacity: 0.25; cursor: default; }
+.kbd-hint { position: fixed; bottom: 4.5rem; right: 1.5rem; font-size: 0.68rem; color: rgba(255,255,255,0.12); }
+
+.slide-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--nb-orange); margin-bottom: 0.7rem; }
+.slide-h2 { font-family: 'DM Serif Display', serif; font-size: clamp(1.6rem, 3.5vw, 2.4rem); margin-bottom: 1.4rem; line-height: 1.2; }
+
+/* CAPA */
+.s-cover { text-align: center; }
+.nb-logo { width: 72px; height: 72px; margin: 0 auto 1.8rem; }
+.cover-kicker { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 1rem; }
+.cover-h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2.2rem, 5.5vw, 3.8rem); line-height: 1.1; margin-bottom: 0.9rem; }
+.cover-h1 em { color: var(--nb-orange); font-style: italic; }
+.cover-sub { font-size: 1rem; color: var(--muted); margin-bottom: 2rem; font-weight: 300; }
+.chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.chip { padding: 0.35rem 1rem; border-radius: 20px; font-size: 0.77rem; border: 1px solid; }
+.chip-o { border-color: var(--nb-orange); color: #fba96a; background: rgba(245,130,42,0.08); }
+.chip-y { border-color: var(--nb-yellow); color: #fbd97a; background: rgba(249,199,79,0.08); }
+
+/* AGENDA */
+.agenda-list { display: flex; flex-direction: column; gap: 0.65rem; width: 100%; max-width: 740px; }
+.ar { display: grid; grid-template-columns: 72px 1fr; gap: 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1.1rem; align-items: center; }
+.at { font-size: 0.73rem; color: var(--nb-orange); font-weight: 600; }
+.ad { font-size: 0.88rem; color: rgba(253,246,236,0.8); }
+
+/* O QUE É */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 840px; }
+.fc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; }
+.fc .fci { font-size: 1.7rem; margin-bottom: 0.7rem; }
+.fc h3 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.4rem; }
+.fc p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.info-box { background: rgba(245,130,42,0.07); border: 1px solid rgba(245,130,42,0.2); border-radius: 8px; padding: 0.9rem 1.1rem; font-size: 0.86rem; color: rgba(253,246,236,0.7); line-height: 1.5; margin-top: 1rem; width: 100%; max-width: 840px; }
+
+/* COMO USAR */
+.steps-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; width: 100%; max-width: 860px; margin-top: 1.5rem; }
+.sc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 0.9rem; text-align: center; }
+.snum { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--nb-red), var(--nb-orange)); display: flex; align-items: center; justify-content: center; font-size: 0.82rem; font-weight: 700; margin: 0 auto 0.7rem; }
+.sc h3 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; }
+.sc p { font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+
+/* USOS */
+.ua-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 860px; }
+.ua { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; }
+.ua .uai { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.ua h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+.ua p { font-size: 0.77rem; color: var(--muted); line-height: 1.4; }
+.ua-tag { display: inline-block; margin-top: 0.6rem; font-size: 0.67rem; padding: 0.2rem 0.6rem; border-radius: 20px; background: rgba(245,130,42,0.1); color: var(--nb-orange); border: 1px solid rgba(245,130,42,0.2); }
+
+/* MAPA CONCEITUAL */
+.mapa-box { width: 100%; max-width: 820px; }
+.mapa-demo { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.8rem; margin-top: 1.2rem; position: relative; overflow: hidden; }
+.mapa-center { text-align: center; margin-bottom: 1.5rem; }
+.mapa-node-main { display: inline-block; background: var(--nb-orange); color: #0e0a06; font-weight: 700; font-size: 0.9rem; padding: 0.6rem 1.4rem; border-radius: 8px; }
+.mapa-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; }
+.mapa-node { background: rgba(245,130,42,0.08); border: 1px solid rgba(245,130,42,0.2); border-radius: 8px; padding: 0.6rem 0.8rem; text-align: center; font-size: 0.78rem; color: rgba(253,246,236,0.8); }
+.mapa-connector { text-align: center; color: rgba(245,130,42,0.4); font-size: 1.2rem; margin-bottom: 0.5rem; }
+.prompt-strip { background: #060401; border: 1px solid rgba(245,130,42,0.15); border-radius: 8px; padding: 0.9rem 1.1rem; margin-top: 1rem; font-family: monospace; font-size: 0.8rem; color: rgba(253,246,236,0.7); line-height: 1.7; }
+.pc-var { color: var(--nb-yellow); background: rgba(249,199,79,0.08); padding: 0 0.15rem; }
+.tip-bar { background: rgba(46,196,182,0.06); border-top: 1px solid rgba(46,196,182,0.12); padding: 0.65rem 1.1rem; font-size: 0.78rem; color: rgba(253,246,236,0.5); border-radius: 0 0 14px 14px; }
+
+/* PODCAST */
+.podcast-box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.8rem; width: 100%; max-width: 800px; }
+.podcast-box h3 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; color: var(--nb-orange); margin-bottom: 0.5rem; }
+.podcast-box p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.2rem; }
+.podcast-steps { display: flex; flex-direction: column; gap: 0.65rem; }
+.ps { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.85rem; color: rgba(253,246,236,0.8); line-height: 1.4; }
+.psn { width: 22px; height: 22px; border-radius: 50%; background: var(--nb-orange); color: #0e0a06; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; flex-shrink: 0; }
+
+/* DICAS */
+.dicas-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 820px; margin-top: 1.5rem; }
+.dc { border-radius: 12px; padding: 1.2rem; font-size: 0.84rem; }
+.dc-do { background: rgba(46,196,182,0.07); border: 1px solid rgba(46,196,182,0.18); }
+.dc-no { background: rgba(230,57,70,0.07); border: 1px solid rgba(230,57,70,0.18); }
+.dc-title { font-weight: 700; font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.7rem; }
+.dc-do .dc-title { color: var(--nb-teal); }
+.dc-no .dc-title { color: #ff8080; }
+.dc ul { padding-left: 1rem; }
+.dc li { margin-bottom: 0.4rem; color: rgba(253,246,236,0.7); }
+
+/* ATIVIDADE */
+.ativ-box { background: linear-gradient(135deg, rgba(230,57,70,0.1), rgba(245,130,42,0.07)); border: 1px solid rgba(245,130,42,0.22); border-radius: 14px; padding: 1.8rem; width: 100%; max-width: 760px; margin-top: 1.5rem; }
+.ativ-steps { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.ativ-steps li { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.87rem; color: rgba(253,246,236,0.8); line-height: 1.5; }
+.sb { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--nb-red), var(--nb-orange)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; }
+
+/* ENCERRA */
+.s-encerra { text-align: center; }
+.enc-big { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.2; margin-bottom: 1rem; }
+.enc-big em { color: var(--nb-orange); }
+.enc-sub { font-size: 0.95rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.6; }
+.nc { display: inline-block; background: rgba(245,130,42,0.06); border: 1px solid rgba(245,130,42,0.15); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.78rem; color: rgba(253,246,236,0.5); margin: 0.3rem; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  body { height: auto; overflow-y: auto; }
+  .slides { flex: none; height: auto; overflow: visible; position: static; }
+  .slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: none;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 80svh;
+    justify-content: flex-start;
+    padding-top: 1.8rem;
+  }
+  .slide.active { display: flex; }
+  .slide::before { display: none; }
+  .progress { position: sticky; top: 0; z-index: 10; }
+  .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.7rem 1rem; }
+  .nav-info, .nav-controls { width: 100%; }
+  .nav-controls { justify-content: flex-end; }
+  .kbd-hint { display: none; }
+  .slide-label { font-size: 0.65rem; }
+  .slide-h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .agenda-list { gap: 0.5rem; }
+  .ar { grid-template-columns: 60px 1fr; gap: 0.6rem; padding: 0.7rem 0.9rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); }
+  .ua-grid { grid-template-columns: 1fr; }
+  .dicas-cols { grid-template-columns: 1fr; }
+  .mapa-row { grid-template-columns: repeat(2, 1fr); }
+  .prompt-strip { font-size: 0.74rem; }
+  .ativ-box { padding: 1.2rem; }
+  .ativ-steps li { font-size: 0.83rem; }
+  .enc-big { font-size: 1.5rem; }
+  .cover-h1 { font-size: 1.8rem; }
+  .nb-logo { width: 54px; height: 54px; }
+  .info-box { font-size: 0.82rem; }
+  .podcast-box { padding: 1.2rem; }
+}
+
+
+.info-card { cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; position: relative; }
+.info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.info-card-hint { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.3; margin-top: 0.6rem; display: block; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 1.2rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #120d04; border: 1px solid rgba(245,130,42,0.22); border-radius: 16px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: mIn 0.28s ease; }
+@keyframes mIn { from { opacity:0; transform: scale(0.94) translateY(14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.3rem 1.4rem 0.9rem; border-bottom: 1px solid rgba(245,130,42,0.1); gap: 0.8rem; }
+.modal-icon-title { display: flex; align-items: center; gap: 0.8rem; }
+.modal-icon { font-size: 2rem; flex-shrink: 0; }
+.modal-title { font-family:'DM Serif Display',serif; font-size: 1.1rem; line-height: 1.2; }
+.modal-sub { font-size: 0.7rem; opacity: 0.35; margin-top: 0.2rem; }
+.modal-close { background: rgba(245,130,42,0.08); border: 1px solid rgba(245,130,42,0.18); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modal-close:hover { background: rgba(245,130,42,0.2); }
+.modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-lbl { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.13em; color: #f5822a; font-weight: 600; margin-bottom: 0.3rem; }
+.modal-def { font-size: 0.87rem; line-height: 1.65; opacity: 0.82; }
+.modal-ex { background: rgba(245,130,42,0.06); border-left: 3px solid #f5822a; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; font-size: 0.83rem; line-height: 1.6; opacity: 0.88; }
+.modal-prompt { background: rgba(0,0,0,0.5); border: 1px solid rgba(245,130,42,0.1); border-radius: 8px; padding: 0.85rem 1rem; font-family: monospace; font-size: 0.77rem; line-height: 1.75; color: rgba(253,246,236,0.72); }
+.modal-prompt .mv { color: #fdd663; background: rgba(251,188,4,0.1); padding: 0 0.15rem; border-radius: 2px; }
+.modal-tip { font-size: 0.79rem; opacity: 0.5; line-height: 1.5; }
+@media (max-width: 600px) { .modal-box { max-height: 92vh; } .modal-header,.modal-body { padding-left:1rem; padding-right:1rem; } }
+
+</style>
+</head>
+<body>
+<div class="slides">
+
+  <!-- SLIDE 1: CAPA -->
+  <div class="slide s-cover active">
+    <div class="nb-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="ng1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#e63946"/><stop offset="50%" stop-color="#f5822a"/><stop offset="100%" stop-color="#f9c74f"/></linearGradient></defs>
+        <rect x="15" y="10" width="55" height="70" rx="6" fill="url(#ng1)" opacity="0.2" stroke="url(#ng1)" stroke-width="1.5"/>
+        <rect x="20" y="10" width="55" height="70" rx="6" fill="url(#ng1)" opacity="0.15" stroke="url(#ng1)" stroke-width="1"/>
+        <rect x="25" y="10" width="55" height="70" rx="6" fill="url(#ng1)" opacity="0.8"/>
+        <rect x="35" y="25" width="35" height="3" rx="1.5" fill="white" opacity="0.9"/>
+        <rect x="35" y="33" width="28" height="2.5" rx="1.25" fill="white" opacity="0.6"/>
+        <rect x="35" y="40" width="32" height="2.5" rx="1.25" fill="white" opacity="0.6"/>
+        <circle cx="72" cy="72" r="18" fill="#0e0a06" stroke="url(#ng1)" stroke-width="1.5"/>
+        <path d="M65 72 L70 77 L79 67" stroke="url(#ng1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="cover-kicker">Curso IA para Professores · Aula 4 de 5</div>
+    <h1 class="cover-h1">Apresentações e<br><em>Mapas Conceituais</em></h1>
+    <div class="cover-sub">Usando o Google NotebookLM para transformar seus documentos em apresentações</div>
+    <div class="chips">
+      <span class="chip chip-o">⏱ 1 hora</span>
+      <span class="chip chip-y">📓 NotebookLM</span>
+      <span class="chip chip-o">💻 Online / EAD</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide">
+    <div style="width:100%;max-width:740px">
+      <div class="slide-label">Agenda da Aula</div>
+      <h2 class="slide-h2">O que vamos fazer hoje?</h2>
+      <div class="agenda-list">
+        <div class="ar"><div class="at">0–10 min</div><div class="ad">Apresentação do NotebookLM e o que ele faz de diferente</div></div>
+        <div class="ar"><div class="at">10–22 min</div><div class="ad">Como carregar documentos e fazer perguntas ao conteúdo</div></div>
+        <div class="ar"><div class="at">22–38 min</div><div class="ad">Gerando mapas conceituais, resumos e guias de estudo</div></div>
+        <div class="ar"><div class="at">38–50 min</div><div class="ad">Criando podcasts e apresentações a partir dos seus materiais</div></div>
+        <div class="ar"><div class="at">50–60 min</div><div class="ad">Atividade prática e encerramento</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: O QUE É NOTEBOOKLM -->
+  <div class="slide">
+    <div style="width:100%;max-width:840px">
+      <div class="slide-label">Ferramenta da Aula</div>
+      <h2 class="slide-h2">O que é o Google NotebookLM?</h2>
+      <div class="feature-grid">
+        <div class="fc"><div class="fci">📄</div><h3>IA ancorada nos seus documentos</h3><p>Diferente de outras IAs, o NotebookLM só responde com base nos arquivos que você carregou — sem inventar informações.</p></div>
+        <div class="fc"><div class="fci">🎧</div><h3>Gera podcasts de áudio</h3><p>Transforma qualquer documento em um diálogo de podcast em inglês ou português — ideal para revisão.</p></div>
+        <div class="fc"><div class="fci">🗺</div><h3>Mapas e guias de estudo</h3><p>Cria automaticamente mapas conceituais, resumos, perguntas de estudo e tabelas comparativas.</p></div>
+        <div class="fc"><div class="fci">🔗</div><h3>Fontes múltiplas</h3><p>Aceita PDFs, Google Docs, sites, YouTube e até anotações escritas como fonte de conhecimento.</p></div>
+      </div>
+      <div class="info-box">✦ Acesse em notebooklm.google.com — gratuito com conta Google. Ideal para professores que já têm seus materiais em PDF ou Google Docs.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: COMO USAR -->
+  <div class="slide">
+    <div style="width:100%;max-width:860px">
+      <div class="slide-label">Passo a Passo</div>
+      <h2 class="slide-h2">Como criar um notebook em 4 passos</h2>
+      <div class="steps-grid">
+        <div class="sc">
+          <div class="snum">1</div>
+          <h3>Crie um notebook</h3>
+          <p>Clique em "Novo notebook" no NotebookLM — cada caderno é um projeto separado.</p>
+        </div>
+        <div class="sc">
+          <div class="snum">2</div>
+          <h3>Carregue fontes</h3>
+          <p>Adicione PDFs, Google Docs, links de sites ou vídeos do YouTube com seus materiais.</p>
+        </div>
+        <div class="sc">
+          <div class="snum">3</div>
+          <h3>Converse com o conteúdo</h3>
+          <p>Faça perguntas como "Quais são os conceitos principais?" e receba respostas citadas.</p>
+        </div>
+        <div class="sc">
+          <div class="snum">4</div>
+          <h3>Gere materiais</h3>
+          <p>Peça mapas conceituais, guias de estudo, resumos e podcast — com um clique.</p>
+        </div>
+      </div>
+      <div class="info-box" style="margin-top:1rem">notebooklm.google.com</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: USOS PEDAGÓGICOS -->
+  <div class="slide">
+    <div style="width:100%;max-width:860px">
+      <div class="slide-label">Aplicações Pedagógicas</div>
+      <h2 class="slide-h2">O que criar com o NotebookLM</h2>
+      <div class="ua-grid">
+        <div class="ua">
+          <div class="uai">🗺</div>
+          <h3>Mapa Conceitual</h3>
+          <p>Gera um mapa visual com os conceitos principais e suas relações, direto do seu PDF de apostila.</p>
+          <span class="ua-tag">1 clique</span>
+        </div>
+        <div class="ua">
+          <div class="uai">📋</div>
+          <h3>Guia de Estudo</h3>
+          <p>Cria um guia com perguntas e respostas baseadas no seu conteúdo — ótimo para revisão de prova.</p>
+          <span class="ua-tag">1 clique</span>
+        </div>
+        <div class="ua">
+          <div class="uai">🎧</div>
+          <h3>Podcast do Conteúdo</h3>
+          <p>Transforma qualquer texto em um diálogo de podcast — alunos podem ouvir o conteúdo.</p>
+          <span class="ua-tag">Áudio gerado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: MAPA CONCEITUAL -->
+  <div class="slide">
+    <div class="mapa-box">
+      <div class="slide-label">Exemplo Gerado pelo NotebookLM</div>
+      <h2 class="slide-h2">Mapa conceitual — Ciclo da Água</h2>
+      <div class="mapa-demo">
+        <div class="mapa-center"><div class="mapa-node-main">Ciclo da Água</div></div>
+        <div class="mapa-connector">↓</div>
+        <div class="mapa-row">
+          <div class="mapa-node">☀️ Evaporação<br><span style="font-size:0.68rem;color:rgba(253,246,236,0.4)">calor solar</span></div>
+          <div class="mapa-node">☁️ Condensação<br><span style="font-size:0.68rem;color:rgba(253,246,236,0.4)">nuvens</span></div>
+          <div class="mapa-node">🌧 Precipitação<br><span style="font-size:0.68rem;color:rgba(253,246,236,0.4)">chuva/neve</span></div>
+          <div class="mapa-node">💧 Infiltração<br><span style="font-size:0.68rem;color:rgba(253,246,236,0.4)">lençol freático</span></div>
+        </div>
+      </div>
+      <div class="prompt-strip">
+        <span style="color:rgba(245,130,42,0.5)">// Prompt usado no NotebookLM após carregar a apostila de Ciências:</span><br>
+        "Crie um mapa conceitual sobre <span class="pc-var">[tema]</span> com os principais conceitos e suas relações."
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: PODCAST -->
+  <div class="slide">
+    <div style="width:100%;max-width:800px">
+      <div class="slide-label">Funcionalidade Exclusiva</div>
+      <h2 class="slide-h2">Audio Overview — o podcast do seu conteúdo</h2>
+      <div class="podcast-box">
+        <h3>🎧 Como funciona?</h3>
+        <p>O NotebookLM gera automaticamente um diálogo entre dois apresentadores de podcast que discutem o conteúdo dos seus documentos. Alunos podem ouvir o resumo da matéria como se fosse um programa de rádio.</p>
+        <div class="podcast-steps">
+          <div class="ps"><div class="psn">1</div>Carregue sua apostila, PDF ou Google Doc no NotebookLM.</div>
+          <div class="ps"><div class="psn">2</div>Clique em "Audio Overview" no painel de ferramentas.</div>
+          <div class="ps"><div class="psn">3</div>Aguarde 1-2 minutos. O podcast é gerado automaticamente.</div>
+          <div class="ps"><div class="psn">4</div>Compartilhe o link com os alunos para revisão em casa.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: APRESENTAÇÃO -->
+  <div class="slide">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Para Professores</div>
+      <h2 class="slide-h2">Criando apresentações a partir dos seus materiais</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+        <div>
+          <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:1rem">O NotebookLM pode extrair os pontos-chave de qualquer documento e organizá-los em tópicos prontos para uma apresentação.</p>
+          <div class="prompt-strip" style="font-size:0.76rem">
+            <span style="color:rgba(245,130,42,0.5)">// Prompt:</span><br>
+            "Com base nos documentos carregados, crie um roteiro de apresentação sobre <span class="pc-var">[tema]</span> com 8 a 10 tópicos principais, cada um com 2-3 pontos de destaque."
+          </div>
+          <div class="info-box" style="margin-top:0.8rem;font-size:0.82rem">✦ Depois, use o Gemini ou Copilot para transformar o roteiro em slides completos.</div>
+        </div>
+        <div class="fc" style="display:flex;flex-direction:column;gap:0.8rem">
+          <div style="font-size:0.8rem;font-weight:600;color:var(--nb-orange);text-transform:uppercase;letter-spacing:0.08em">Fluxo completo</div>
+          <div class="ar" style="grid-template-columns:30px 1fr;gap:0.7rem"><div style="font-size:1rem">📄</div><div class="ad" style="font-size:0.8rem">PDF da apostila → NotebookLM</div></div>
+          <div class="ar" style="grid-template-columns:30px 1fr;gap:0.7rem"><div style="font-size:1rem">🗺</div><div class="ad" style="font-size:0.8rem">NotebookLM → roteiro de apresentação</div></div>
+          <div class="ar" style="grid-template-columns:30px 1fr;gap:0.7rem"><div style="font-size:1rem">✦</div><div class="ad" style="font-size:0.8rem">Roteiro → Gemini → slides prontos</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: DICAS -->
+  <div class="slide">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Boas Práticas</div>
+      <h2 class="slide-h2">Como tirar o máximo do NotebookLM</h2>
+      <div class="dicas-cols">
+        <div class="dc dc-do">
+          <div class="dc-title">✔ Faça isso</div>
+          <ul>
+            <li>Carregue documentos bem organizados e legíveis</li>
+            <li>Use múltiplas fontes para um conteúdo mais rico</li>
+            <li>Peça o mapa conceitual antes de criar exercícios</li>
+            <li>Use o podcast para revisão dos alunos em casa</li>
+            <li>Combine com o Gemini para criar slides a partir do roteiro</li>
+          </ul>
+        </div>
+        <div class="dc dc-no">
+          <div class="dc-title">✖ Evite isso</div>
+          <ul>
+            <li>Carregar documentos escaneados com baixa qualidade</li>
+            <li>Esperar que a IA interprete gráficos e tabelas complexas</li>
+            <li>Usar para documentos com informações confidenciais de alunos</li>
+            <li>Confiar no podcast para conteúdo que precisa de precisão técnica</li>
+            <li>Carregar documentos desorganizados — o resultado reflete a fonte</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: ATIVIDADE -->
+  <div class="slide">
+    <div style="width:100%;max-width:760px">
+      <div class="slide-label">Agora é com você!</div>
+      <h2 class="slide-h2">Atividade: seu primeiro notebook</h2>
+      <div class="ativ-box">
+        <ol class="ativ-steps">
+          <li><div class="sb">1</div>Acesse notebooklm.google.com com sua conta Google.</li>
+          <li><div class="sb">2</div>Crie um novo notebook e carregue um PDF ou Google Doc de um conteúdo da sua disciplina.</li>
+          <li><div class="sb">3</div>Clique em "Gerar guia de estudo" ou "Mapa conceitual" — sem digitar nada.</li>
+          <li><div class="sb">4</div>Gere o Audio Overview e ouça 1-2 minutos do podcast criado.</li>
+          <li><div class="sb">5</div>Avalie: esse material poderia ser usado com sua turma? Como?</li>
+          <li><div class="sb">6</div>Compartilhe no fórum: qual foi o resultado mais surpreendente?</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: COMPARATIVO -->
+  <div class="slide">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">NotebookLM vs Outras IAs</div>
+      <h2 class="slide-h2">Por que o NotebookLM é diferente?</h2>
+      <div style="display:flex;flex-direction:column;gap:0.7rem;margin-top:1.5rem">
+        <div class="ar"><div style="font-size:1.3rem">📌</div><div class="ad"><strong>Respostas baseadas nos seus documentos</strong> — não inventa informações. Cada resposta vem com a fonte citada.</div></div>
+        <div class="ar"><div style="font-size:1.3rem">🔒</div><div class="ad"><strong>Seus materiais ficam privados</strong> — o conteúdo carregado não é usado para treinar o modelo.</div></div>
+        <div class="ar"><div style="font-size:1.3rem">🎧</div><div class="ad"><strong>Podcast é exclusivo</strong> — nenhuma outra IA gratuita gera áudio de podcast do seu conteúdo automaticamente.</div></div>
+        <div class="ar" style="border-color:rgba(249,199,79,0.2)"><div style="font-size:1.3rem">⚠️</div><div class="ad"><strong>Limitação:</strong> só sabe o que está nos documentos carregados — não acessa a internet para buscar novas informações.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ENCERRAMENTO -->
+  <div class="slide s-encerra">
+    <div class="slide-label">Aula 4 · Concluída</div>
+    <div class="enc-big">Seus documentos agora<br><em>ganham vida</em> com a IA.</div>
+    <p class="enc-sub">Na última aula: <strong>Claude</strong> para análise de dados,<br>planilhas e geração de gráficos educacionais.</p>
+    <div>
+      <span class="nc">📊 Planilhas inteligentes</span>
+      <span class="nc">📈 Gráficos automáticos</span>
+      <span class="nc">🔢 Fórmulas com IA</span>
+    </div>
+  </div>
+
+</div>
+<div class="progress"><div class="progress-fill" id="progressFill" style="width:8.33%"></div></div>
+<div class="nav">
+  <div>
+    <div class="nav-course">Curso IA para Professores</div>
+    <div class="nav-title">Aula 4 · Apresentações e Mapas Conceituais · NotebookLM</div>
+  </div>
+  <div class="nav-controls">
+    <span class="nav-counter" id="counter">1 / 12</span>
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+  </div>
+</div>
+<div class="kbd-hint">← →</div>
+<script>
+let current = 0; const total = 12;
+function changeSlide(dir) {
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active'); slides[current].classList.add('exit');
+  setTimeout(() => slides[current].classList.remove('exit'), 450);
+  current = Math.max(0, Math.min(total - 1, current + dir));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / total) * 100}%`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+const _MD={};
+function regCard(el,d){
+  el.classList.add('info-card');
+  const id='c'+Math.random().toString(36).slice(2,7);
+  _MD[id]=d; el.dataset.mid=id;
+  el.addEventListener('click',()=>openModal(id));
+  const h=document.createElement('span');
+  h.className='info-card-hint'; h.textContent='🔍 clique para detalhes';
+  el.appendChild(h);
+}
+function openModal(id){
+  const d=_MD[id]; if(!d) return;
+  document.getElementById('mIcon').textContent=d.icon||'📌';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub||'';
+  let h='';
+  if(d.def) h+=`<div><div class="modal-lbl">O que é</div><div class="modal-def">${d.def}</div></div>`;
+  if(d.ex)  h+=`<div><div class="modal-lbl">Exemplo real — sala de aula</div><div class="modal-ex">${d.ex}</div></div>`;
+  if(d.pr)  h+=`<div><div class="modal-lbl">Prompt para usar agora</div><div class="modal-prompt">${d.pr}</div></div>`;
+  if(d.tip) h+=`<div class="modal-tip">💡 ${d.tip}</div>`;
+  document.getElementById('mBody').innerHTML=h;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // SLIDE 3 — Features NotebookLM
+  const fcards = document.querySelectorAll('.fc');
+  const fcData = [
+    { icon:'📄', title:'Ancorado nos seus documentos', sub:'Respostas verificadas',
+      def:'Ao contrário do ChatGPT ou Gemini, o NotebookLM não inventa informações — ele só responde com base nos arquivos que você carregou. Cada resposta vem com a citação exata do trecho que a embasou.',
+      ex:'A professora Simone carrega o currículo paulista de Ciências no NotebookLM. Quando pergunta "quais habilidades de 7º ano tratam de ecossistemas?", ele responde citando os trechos exatos do documento — sem misturar com outras fontes.',
+      pr:'Com base nos documentos carregados, liste todas as habilidades relacionadas a <span class="mv">[tema]</span> para o <span class="mv">[ano]</span>. Cite o trecho exato de onde cada informação foi extraída.',
+      tip:'Se o NotebookLM diz "não encontrei informação sobre isso nos documentos", é porque realmente não está lá — é mais confiável que outras IAs nesse ponto.' },
+    { icon:'🎧', title:'Gera podcasts de áudio', sub:'Audio Overview',
+      def:'O "Audio Overview" é uma funcionalidade única do NotebookLM que transforma qualquer documento em um episódio de podcast com dois apresentadores que discutem o conteúdo em linguagem natural e envolvente.',
+      ex:'O professor Thiago carrega sua apostila de História do Brasil no NotebookLM e gera um podcast de 8 minutos. Ele compartilha o link com os alunos como tarefa: "ouça o podcast antes da próxima aula e anote 3 dúvidas".',
+      pr:'Após gerar o Audio Overview, use o chat para: "liste os 5 pontos principais discutidos no podcast e crie 3 questões de verificação de compreensão para usar em sala".',
+      tip:'O Audio Overview pode ser baixado como arquivo de áudio — você pode enviar pelo WhatsApp da turma ou postar no Google Classroom.' },
+    { icon:'🗺', title:'Mapas e guias de estudo', sub:'1 clique para gerar',
+      def:'O NotebookLM gera automaticamente 5 tipos de material de estudo: mapa conceitual, guia de estudo, linha do tempo, perguntas frequentes e documento de briefing — todos baseados nos seus arquivos.',
+      ex:'A professora Elaine carrega um PDF de 80 páginas sobre o sistema digestivo. Com um clique em "Gerar guia de estudo", recebe um documento organizado com os conceitos principais, definições e perguntas para revisão — em 30 segundos.',
+      pr:'Com base nos documentos, crie um mapa conceitual sobre <span class="mv">[tema]</span> mostrando: conceito central, 5-7 conceitos secundários e as relações entre eles. Use setas e conectivos para mostrar as relações.',
+      tip:'O mapa conceitual gerado pode ser copiado e colado no Google Slides ou Canva para criar uma versão visual mais elaborada.' },
+    { icon:'🔗', title:'Aceita múltiplas fontes', sub:'PDF · Docs · YouTube · Sites',
+      def:'O NotebookLM pode processar PDFs, Google Docs, links de sites, vídeos do YouTube e texto colado diretamente. Você pode combinar até 50 fontes diferentes em um único notebook.',
+      ex:'O professor de Sociologia Renato monta um notebook com: o capítulo do livro didático (PDF), um vídeo do YouTube sobre o tema, um artigo de jornal e suas próprias anotações de aula. O NotebookLM cruza todas as fontes nas respostas.',
+      pr:'Analise todas as fontes carregadas e identifique: 1) Pontos em que as fontes concordam, 2) Pontos em que divergem, 3) O que cada fonte acrescenta de único ao tema <span class="mv">[tema]</span>.',
+      tip:'Para vídeos do YouTube, basta colar o link — o NotebookLM transcreve automaticamente o áudio e usa como fonte.' },
+  ];
+  fcards.forEach((el,i)=>{ if(fcData[i]) regCard(el, fcData[i]); });
+
+  // SLIDE 5 — Usos pedagógicos
+  const uaCards = document.querySelectorAll('.ua');
+  const uaData = [
+    { icon:'🗺', title:'Mapa Conceitual', sub:'Gerado automaticamente',
+      def:'O NotebookLM gera mapas conceituais estruturados com o conceito central, conceitos secundários e as relações entre eles — tudo com base no conteúdo dos seus documentos.',
+      ex:'A professora de Biologia Patrícia carrega o capítulo sobre genética. O mapa conceitual gerado mostra DNA, cromossomos, genes, alelos, dominância e recessividade — com as relações corretas entre cada conceito.',
+      pr:'Gere um mapa conceitual sobre <span class="mv">[tema]</span> com: 1 conceito central, 5-8 conceitos relacionados, e as conexões entre eles explicadas em uma frase cada. Formato: texto estruturado que possa ser transformado em mapa visual.',
+      tip:'Após gerar o mapa em texto, peça ao Gemini ou ChatGPT para convertê-lo em código para o app "MindMeister" ou "Miro" — você terá um mapa visual interativo.' },
+    { icon:'📋', title:'Guia de Estudo', sub:'Para revisão de prova',
+      def:'O guia de estudo gerado pelo NotebookLM organiza os conceitos principais em perguntas e respostas, definições-chave, exemplos e pontos de atenção — tudo baseado nos documentos carregados.',
+      ex:'Semana antes da prova de Química, o professor Rodrigo carrega todas as apostilas do bimestre. O NotebookLM gera um guia de estudo com as 20 perguntas mais prováveis de cair na prova, baseadas nos tópicos mais abordados.',
+      pr:'Com base nos documentos, crie um guia de estudo para a prova de <span class="mv">[disciplina]</span>. Inclua: 10 questões com resposta, 5 definições importantes, 3 fórmulas ou regras-chave e os pontos mais difíceis do conteúdo.',
+      tip:'Compartilhe o link do notebook com os alunos — eles podem fazer perguntas diretamente ao NotebookLM e ele responde com base apenas nos materiais da aula.' },
+    { icon:'🎧', title:'Podcast do Conteúdo', sub:'Para revisar em qualquer lugar',
+      def:'O Audio Overview transforma documentos densos em conversas envolventes de 8-12 minutos. Os dois apresentadores virtuais fazem analogias, fazem perguntas e discutem as implicações do conteúdo.',
+      ex:'Alunos do 3º ano do Ensino Médio precisam revisar a Revolução Industrial para o ENEM. O professor Marcos gera um podcast a partir dos capítulos do livro. Os alunos ouvem no ônibus, na academia ou antes de dormir.',
+      pr:'Após ouvir o podcast gerado, use o chat do NotebookLM: "o podcast menciona <span class="mv">[ponto específico]</span>? Se sim, em qual trecho dos documentos originais esse ponto está fundamentado?"',
+      tip:'Para tornar o podcast mais focado, carregue apenas os documentos do tópico específico — quanto menos material, mais concentrado será o conteúdo do podcast.' },
+  ];
+  uaCards.forEach((el,i)=>{ if(uaData[i]) regCard(el, uaData[i]); });
+
+  // SLIDE 7 — passos do podcast
+  const psCards = document.querySelectorAll('.ps');
+  const psData = [
+    { icon:'📄', title:'Carregue sua apostila', sub:'Passo 1 — Fontes',
+      def:'O NotebookLM aceita PDFs, Google Docs, links e texto colado. Para o podcast, quanto mais rico o conteúdo do documento, mais elaborada será a conversa gerada.',
+      ex:'A professora carrega o PDF do capítulo de Física Quântica. O NotebookLM detecta automaticamente os conceitos principais: dualidade onda-partícula, princípio da incerteza, entrelaçamento quântico.',
+      tip:'Documentos com títulos, subtítulos e estrutura clara geram podcasts mais organizados. Evite PDFs escaneados com baixa qualidade.' },
+    { icon:'🎛', title:'Clique em Audio Overview', sub:'Passo 2 — Geração',
+      def:'O botão "Audio Overview" fica no painel de ferramentas do NotebookLM. Ao clicar, o modelo processa todos os documentos e gera o script do podcast com dois apresentadores.',
+      ex:'A geração leva entre 1 e 3 minutos dependendo do volume de conteúdo. Uma apostila de 20 páginas gera um podcast de aproximadamente 8 minutos.',
+      tip:'Você pode pedir ao NotebookLM que o podcast foque em aspectos específicos: "gere o podcast com ênfase nas aplicações práticas, não na teoria".' },
+    { icon:'⏱', title:'Aguarde 1-2 minutos', sub:'Passo 3 — Processamento',
+      def:'Durante o processamento, o NotebookLM está criando o script, distribuindo as falas entre os dois apresentadores e gerando o áudio sintetizado em português ou inglês.',
+      ex:'Enquanto aguarda, o professor pode preparar as perguntas de discussão que fará em aula após os alunos ouvirem o podcast — usando o chat do NotebookLM para gerar essas perguntas.',
+      tip:'Se o áudio gerado estiver em inglês, recarregue a página e tente novamente — às vezes o NotebookLM precisa ser reiniciado para gerar em português.' },
+    { icon:'🔗', title:'Compartilhe o link', sub:'Passo 4 — Distribuição',
+      def:'O podcast pode ser baixado como arquivo MP3 ou compartilhado via link direto. O link leva para a página de reprodução dentro do NotebookLM, onde os alunos também podem fazer perguntas.',
+      ex:'O professor Marcos cola o link do podcast no Google Classroom com a instrução: "ouça antes da sexta-feira e anote 2 dúvidas para trazermos para a aula". Na aula, as dúvidas formam o roteiro da discussão.',
+      pr:'Após os alunos ouvirem o podcast, use no chat: "crie 5 perguntas de verificação de compreensão sobre o conteúdo, do nível básico ao avançado".',
+      tip:'O link é público — qualquer pessoa com o link pode ouvir, sem precisar de conta Google. Ideal para enviar via WhatsApp.' },
+  ];
+  psCards.forEach((el,i)=>{ if(psData[i]) regCard(el, psData[i]); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+});
+</script>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon-title">
+        <div class="modal-icon" id="mIcon">📌</div>
+        <div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
