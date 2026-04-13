@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 1 — Gemini · IA para Materiais Didáticos</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;700&family=Google+Sans+Display:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue: #1a73e8;
+  --teal: #00bfa5;
+  --purple: #7c4dff;
+  --red: #ea4335;
+  --yellow: #fbbc04;
+  --dark: #0d1117;
+  --mid: #1c2333;
+  --light: #e8f0fe;
+  --white: #ffffff;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--dark);
+  color: var(--white);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* SLIDE CONTAINER */
+.slides { flex: 1; position: relative; overflow: hidden; }
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+}
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+.slide.exit {
+  opacity: 0;
+  transform: translateX(-60px);
+}
+
+/* GEMINI GRADIENT BG */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 80% 20%, rgba(26,115,232,0.18) 0%, transparent 70%),
+              radial-gradient(ellipse 50% 50% at 20% 80%, rgba(0,191,165,0.12) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 40% at 50% 50%, rgba(124,77,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* GEMINI STAR LOGO */
+.gemini-star {
+  width: 48px; height: 48px;
+  position: relative;
+  flex-shrink: 0;
+}
+.gemini-star svg { width: 100%; height: 100%; }
+
+/* NAV BAR */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.nav-left { display: flex; align-items: center; gap: 0.8rem; }
+.nav-course { font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; text-transform: uppercase; }
+.nav-title { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500; }
+.nav-controls { display: flex; align-items: center; gap: 1rem; }
+.nav-counter { font-size: 0.8rem; color: rgba(255,255,255,0.4); font-family: monospace; }
+.btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn:hover { background: rgba(255,255,255,0.13); }
+.btn:disabled { opacity: 0.3; cursor: default; }
+
+/* PROGRESS BAR */
+.progress {
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  flex-shrink: 0;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue), var(--teal), var(--purple));
+  transition: width 0.4s ease;
+}
+
+/* ===== SLIDE LAYOUTS ===== */
+
+/* SLIDE 1 — CAPA */
+.s-cover { text-align: center; }
+.s-cover .kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 2rem;
+}
+.s-cover .gemini-big {
+  width: 80px; height: 80px;
+  margin: 0 auto 2rem;
+}
+.s-cover h1 {
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #fff 0%, #a8c7fa 50%, #00bfa5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.s-cover .subtitle {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.55);
+  font-weight: 300;
+  margin-bottom: 2.5rem;
+}
+.s-cover .chips {
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+.chip-blue { border-color: var(--blue); color: #7ab0f5; background: rgba(26,115,232,0.1); }
+.chip-teal { border-color: var(--teal); color: #5cd8c9; background: rgba(0,191,165,0.1); }
+.chip-purple { border-color: var(--purple); color: #b29dff; background: rgba(124,77,255,0.1); }
+
+/* SLIDE 2 — AGENDA */
+.s-agenda { width: 100%; max-width: 800px; }
+.slide-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 0.6rem;
+}
+.slide-h2 {
+  font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+}
+.agenda-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.agenda-row {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  align-items: center;
+  animation: fadeUp 0.4s ease both;
+}
+.agenda-row:nth-child(1) { animation-delay: 0.1s; }
+.agenda-row:nth-child(2) { animation-delay: 0.2s; }
+.agenda-row:nth-child(3) { animation-delay: 0.3s; }
+.agenda-row:nth-child(4) { animation-delay: 0.4s; }
+.agenda-row:nth-child(5) { animation-delay: 0.5s; }
+.agenda-time { font-size: 0.78rem; color: var(--teal); font-weight: 600; font-family: monospace; }
+.agenda-text { font-size: 0.92rem; color: rgba(255,255,255,0.85); }
+
+/* SLIDE 3 — O QUE É GEMINI */
+.s-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; width: 100%; max-width: 900px; align-items: center; }
+.col-text {}
+.col-visual {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.feature-row {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+}
+.feature-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.fi-blue { background: rgba(26,115,232,0.15); }
+.fi-teal { background: rgba(0,191,165,0.15); }
+.fi-purple { background: rgba(124,77,255,0.15); }
+.fi-yellow { background: rgba(251,188,4,0.15); }
+.feature-text { font-size: 0.85rem; color: rgba(255,255,255,0.75); line-height: 1.5; }
+.feature-text strong { color: white; display: block; font-size: 0.9rem; margin-bottom: 0.2rem; }
+.body-text { font-size: 0.95rem; color: rgba(255,255,255,0.7); line-height: 1.7; margin-bottom: 1.2rem; }
+.highlight-box {
+  background: rgba(26,115,232,0.1);
+  border-left: 3px solid var(--blue);
+  padding: 0.8rem 1rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.5;
+}
+
+/* SLIDE 4 — ACESSO GEMINI */
+.s-steps { width: 100%; max-width: 780px; }
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+.step-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.4rem;
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+.step-card:nth-child(1) { animation-delay: 0.1s; }
+.step-card:nth-child(2) { animation-delay: 0.2s; }
+.step-card:nth-child(3) { animation-delay: 0.3s; }
+.step-num {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem;
+  margin: 0 auto 1rem;
+}
+.step-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; }
+.step-card p { font-size: 0.8rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+.url-box {
+  background: rgba(0,191,165,0.08);
+  border: 1px solid rgba(0,191,165,0.25);
+  border-radius: 8px;
+  padding: 0.9rem 1.2rem;
+  font-family: monospace;
+  font-size: 1rem;
+  color: var(--teal);
+  text-align: center;
+  margin-top: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+/* SLIDE 5 — O QUE É UM PROMPT */
+.s-prompt { width: 100%; max-width: 820px; }
+.prompt-anatomy {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 1.8rem;
+  margin-top: 1.5rem;
+  font-family: monospace;
+  font-size: 0.88rem;
+  line-height: 2;
+}
+.pa-context { color: #7ab0f5; }
+.pa-task { color: #5cd8c9; }
+.pa-format { color: #b29dff; }
+.pa-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.lbl-blue { background: rgba(26,115,232,0.2); color: #7ab0f5; }
+.lbl-teal { background: rgba(0,191,165,0.2); color: #5cd8c9; }
+.lbl-purple { background: rgba(124,77,255,0.2); color: #b29dff; }
+.legend { display: flex; gap: 1.5rem; margin-top: 1.2rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* SLIDE 6 — PROMPT PLANO DE AULA */
+.s-prompt-demo { width: 100%; max-width: 820px; }
+.prompt-box {
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 1.2rem;
+}
+.prompt-topbar {
+  background: rgba(255,255,255,0.05);
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #ea4335; }
+.dot-y { background: #fbbc04; }
+.dot-g { background: #34a853; }
+.prompt-code {
+  padding: 1.2rem 1.4rem;
+  font-family: monospace;
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.8);
+}
+.pc-comment { color: rgba(255,255,255,0.3); }
+.pc-var { color: #fbbc04; background: rgba(251,188,4,0.08); padding: 0 0.2rem; border-radius: 3px; }
+.pc-key { color: #7ab0f5; }
+.result-preview {
+  background: rgba(0,191,165,0.07);
+  border: 1px solid rgba(0,191,165,0.2);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-top: 1rem;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.65);
+  line-height: 1.6;
+}
+.result-preview strong { color: var(--teal); display: block; margin-bottom: 0.4rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* SLIDE 7 — EXERCÍCIOS */
+.s-two-col-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; width: 100%; max-width: 900px; }
+.mini-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 1.3rem;
+}
+.mini-card .mc-icon { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.mini-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+.mini-card p { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+.mini-card .mc-prompt {
+  margin-top: 0.8rem;
+  background: rgba(0,0,0,0.3);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--teal);
+  line-height: 1.5;
+}
+
+/* SLIDE 8 — RUBRICAS */
+.s-table { width: 100%; max-width: 860px; }
+.rubrica-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+}
+.rubrica-table th {
+  background: rgba(255,255,255,0.06);
+  padding: 0.7rem 1rem;
+  text-align: left;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.rubrica-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.7);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.rubrica-table tr:last-child td { border-bottom: none; }
+.level {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.lv-in { background: rgba(234,67,53,0.15); color: #f28b82; }
+.lv-ba { background: rgba(251,188,4,0.15); color: #fdd663; }
+.lv-ad { background: rgba(26,115,232,0.15); color: #7ab0f5; }
+.lv-av { background: rgba(0,191,165,0.15); color: #5cd8c9; }
+
+/* SLIDE 9 — DICAS */
+.s-dicas { width: 100%; max-width: 820px; }
+.dicas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+.dica-card {
+  border-radius: 12px;
+  padding: 1.2rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.dica-do {
+  background: rgba(0,191,165,0.08);
+  border: 1px solid rgba(0,191,165,0.2);
+}
+.dica-dont {
+  background: rgba(234,67,53,0.08);
+  border: 1px solid rgba(234,67,53,0.2);
+}
+.dica-title {
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8rem;
+}
+.dica-do .dica-title { color: var(--teal); }
+.dica-dont .dica-title { color: #f28b82; }
+.dica-card ul { padding-left: 1rem; }
+.dica-card li { margin-bottom: 0.4rem; color: rgba(255,255,255,0.7); }
+
+/* SLIDE 10 — ATIVIDADE */
+.s-atividade { width: 100%; max-width: 780px; }
+.atividade-box {
+  background: linear-gradient(135deg, rgba(26,115,232,0.12), rgba(0,191,165,0.08));
+  border: 1px solid rgba(26,115,232,0.25);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 1.5rem;
+}
+.atividade-steps { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+.atividade-steps li {
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  font-size: 0.9rem; color: rgba(255,255,255,0.8); line-height: 1.5;
+}
+.step-bubble {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--teal));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700;
+  flex-shrink: 0; margin-top: 0.05rem;
+}
+
+/* SLIDE 11 — LIMITAÇÕES */
+.s-limites { width: 100%; max-width: 800px; }
+.limites-list { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.5rem; }
+.limite-row {
+  display: flex; align-items: center; gap: 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  animation: fadeUp 0.4s ease both;
+}
+.limite-row:nth-child(1) { animation-delay: 0.1s; }
+.limite-row:nth-child(2) { animation-delay: 0.2s; }
+.limite-row:nth-child(3) { animation-delay: 0.3s; }
+.limite-row:nth-child(4) { animation-delay: 0.4s; }
+.limite-icon { font-size: 1.4rem; flex-shrink: 0; }
+.limite-text { font-size: 0.88rem; color: rgba(255,255,255,0.75); line-height: 1.4; }
+.limite-text strong { color: white; display: block; font-size: 0.9rem; }
+
+/* SLIDE 12 — ENCERRAMENTO */
+.s-encerra { text-align: center; }
+.encerra-big {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #a8c7fa, #5cd8c9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.encerra-sub { font-size: 1rem; color: rgba(255,255,255,0.5); margin-bottom: 2rem; line-height: 1.6; }
+.next-chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.next-chip {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.6);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* KEYBOARD HINT */
+.kbd-hint {
+  position: fixed;
+  bottom: 4.5rem;
+  right: 1.5rem;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  body { height: auto; overflow-y: auto; }
+  .slides { flex: none; height: auto; overflow: visible; position: static; }
+  .slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: none;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 80svh;
+    justify-content: flex-start;
+    padding-top: 1.8rem;
+  }
+  .slide.active { display: flex; }
+  .slide::before { display: none; }
+  .progress { position: sticky; top: 0; z-index: 10; height: 3px; }
+  .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.7rem 1rem; }
+  .nav-left { width: 100%; }
+  .nav-controls { width: 100%; justify-content: flex-end; }
+  .nav-course { font-size: 0.62rem; }
+  .nav-title { font-size: 0.75rem; }
+  .kbd-hint { display: none; }
+
+  /* Slide 1 - Capa */
+  .s-cover h1 { font-size: 1.8rem; }
+  .s-cover .subtitle { font-size: 0.88rem; }
+  .s-cover .gemini-big { width: 56px; height: 56px; }
+
+  /* Agenda */
+  .s-agenda { width: 100%; }
+  .agenda-row { grid-template-columns: 65px 1fr; gap: 0.7rem; padding: 0.7rem 0.9rem; }
+  .agenda-time { font-size: 0.7rem; }
+  .agenda-text { font-size: 0.82rem; }
+
+  /* Two-col → single col */
+  .s-two-col { grid-template-columns: 1fr; gap: 1.2rem; }
+  .s-two-col-cards { grid-template-columns: 1fr; gap: 0.9rem; }
+
+  /* Steps grid */
+  .steps-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+
+  /* Prompt */
+  .prompt-anatomy { font-size: 0.76rem; line-height: 1.6; padding: 1rem; }
+  .prompt-body { font-size: 0.75rem; line-height: 1.6; }
+  .prompt-code { font-size: 0.75rem; }
+
+  /* Rubrica */
+  .rubrica-table { font-size: 0.72rem; display: block; overflow-x: auto; }
+  .rubrica-table th, .rubrica-table td { padding: 0.5rem 0.6rem; }
+
+  /* Dicas */
+  .dicas-grid { grid-template-columns: 1fr; }
+
+  /* Tools */
+  .tools-grid { grid-template-columns: repeat(2, 1fr); }
+
+  /* Atividade */
+  .activity-steps li { font-size: 0.84rem; }
+
+  /* Encerra */
+  .encerra-big { font-size: 1.6rem; }
+  .encerra-sub { font-size: 0.85rem; }
+  .next-chips { flex-wrap: wrap; justify-content: center; }
+
+  /* Slide label & h2 */
+  .slide-label { font-size: 0.65rem; }
+  .slide-h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .body-text { font-size: 0.86rem; }
+  .highlight-box { font-size: 0.82rem; }
+
+  /* Feature rows */
+  .feature-row { gap: 0.6rem; }
+  .feature-icon { width: 30px; height: 30px; font-size: 0.9rem; }
+  .feature-text { font-size: 0.8rem; }
+
+  /* Mini cards */
+  .mini-card { padding: 1rem; }
+  .mini-card h3 { font-size: 0.9rem; }
+  .mini-card p { font-size: 0.78rem; }
+  .mini-card .mc-prompt { font-size: 0.7rem; }
+
+  /* Atividade box */
+  .atividade-box { padding: 1.2rem; }
+  .atividade-steps li { font-size: 0.84rem; }
+
+  /* Limites */
+  .limites-list { gap: 0.6rem; }
+  .limite-row { padding: 0.8rem 1rem; }
+  .limite-text { font-size: 0.82rem; }
+
+  /* URL box */
+  .url-box { font-size: 0.88rem; padding: 0.7rem 1rem; }
+
+  /* Legend */
+  .legend { flex-direction: column; gap: 0.5rem; }
+}
+
+/* ===== MODAL INTERATIVO ===== */
+.info-card { cursor: pointer; transition: transform 0.18s, box-shadow 0.18s; position: relative; }
+.info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.info-card-hint { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.35; margin-top: 0.6rem; display: block; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 1.2rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #0d1a28; border: 1px solid rgba(26,115,232,0.25); border-radius: 16px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: mIn 0.28s ease; }
+@keyframes mIn { from { opacity:0; transform: scale(0.94) translateY(14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.3rem 1.4rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.07); gap: 0.8rem; }
+.modal-icon-title { display: flex; align-items: center; gap: 0.8rem; }
+.modal-icon { font-size: 2rem; flex-shrink: 0; }
+.modal-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+.modal-sub { font-size: 0.73rem; opacity: 0.4; margin-top: 0.2rem; }
+.modal-close { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
+.modal-close:hover { background: rgba(255,255,255,0.15); }
+.modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-lbl { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.13em; color: #00bfa5; font-weight: 600; margin-bottom: 0.3rem; }
+.modal-def { font-size: 0.87rem; line-height: 1.65; opacity: 0.82; }
+.modal-ex { background: rgba(26,115,232,0.07); border-left: 3px solid #1a73e8; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; font-size: 0.83rem; line-height: 1.6; opacity: 0.88; }
+.modal-prompt { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.85rem 1rem; font-family: monospace; font-size: 0.77rem; line-height: 1.75; color: rgba(255,255,255,0.72); }
+.modal-prompt .mv { color: #fdd663; background: rgba(251,188,4,0.1); padding: 0 0.15rem; border-radius: 2px; }
+.modal-tip { font-size: 0.79rem; opacity: 0.5; line-height: 1.5; }
+@media (max-width: 600px) { .modal-box { max-height: 92vh; } .modal-header,.modal-body { padding-left: 1rem; padding-right: 1rem; } }
+
+</style>
+</head>
+<body>
+
+<div class="slides" id="slides">
+
+  <!-- SLIDE 1: CAPA -->
+  <div class="slide s-cover active" id="s1">
+    <div class="kicker">Curso IA para Professores · Aula 1 de 5</div>
+    <div class="gemini-big">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#4285f4"/>
+            <stop offset="50%" stop-color="#00bfa5"/>
+            <stop offset="100%" stop-color="#7c4dff"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 5 C50 5, 58 35, 80 50 C58 65, 50 95, 50 95 C50 95, 42 65, 20 50 C42 35, 50 5, 50 5Z" fill="url(#g1)" opacity="0.9"/>
+        <path d="M50 20 C50 20, 55 40, 68 50 C55 60, 50 80, 50 80 C50 80, 45 60, 32 50 C45 40, 50 20, 50 20Z" fill="white" opacity="0.15"/>
+      </svg>
+    </div>
+    <h1>IA para Criar<br>Materiais Didáticos</h1>
+    <div class="subtitle">Usando o Google Gemini para transformar seu planejamento</div>
+    <div class="chips">
+      <span class="chip chip-blue">⏱ 1 hora</span>
+      <span class="chip chip-teal">💻 Online / EAD</span>
+      <span class="chip chip-purple">✦ Powered by Gemini</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide s-agenda" id="s2">
+    <div class="slide-label">Agenda da Aula</div>
+    <h2 class="slide-h2">O que vamos fazer hoje?</h2>
+    <div class="agenda-list">
+      <div class="agenda-row"><div class="agenda-time">0–10 min</div><div class="agenda-text">Abertura: o que é o Gemini e como ele funciona</div></div>
+      <div class="agenda-row"><div class="agenda-time">10–20 min</div><div class="agenda-text">Como escrever um bom prompt — estrutura e exemplos</div></div>
+      <div class="agenda-row"><div class="agenda-time">20–35 min</div><div class="agenda-text">Mão na massa: plano de aula e exercícios com Gemini</div></div>
+      <div class="agenda-row"><div class="agenda-time">35–48 min</div><div class="agenda-text">Rubricas e avaliações geradas pela IA</div></div>
+      <div class="agenda-row"><div class="agenda-time">48–60 min</div><div class="agenda-text">Revisão crítica, limitações e encerramento</div></div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: O QUE É GEMINI -->
+  <div class="slide" id="s3">
+    <div class="s-two-col">
+      <div class="col-text">
+        <div class="slide-label">Ferramenta da Aula</div>
+        <h2 class="slide-h2">O que é o Google Gemini?</h2>
+        <p class="body-text">É o assistente de IA do Google — um modelo de linguagem que entende texto, imagens e voz, integrado ao ecossistema Google.</p>
+        <div class="highlight-box">✦ Para professores da rede estadual: funciona com a conta Google da escola, sem precisar criar novo cadastro.</div>
+      </div>
+      <div class="col-visual">
+        <div class="feature-row">
+          <div class="feature-icon fi-blue">🔤</div>
+          <div class="feature-text"><strong>Processa texto e imagem</strong>Entende comandos em português e responde com naturalidade.</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon fi-teal">🔗</div>
+          <div class="feature-text"><strong>Integrado ao Google</strong>Conecta com Google Docs, Slides, Drive e Gmail.</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon fi-purple">🆓</div>
+          <div class="feature-text"><strong>Gratuito</strong>Versão básica disponível em gemini.google.com sem custo.</div>
+        </div>
+        <div class="feature-row">
+          <div class="feature-icon fi-yellow">🌐</div>
+          <div class="feature-text"><strong>Acessa a web</strong>Diferente de outros modelos, busca informações atuais.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: COMO ACESSAR -->
+  <div class="slide s-steps" id="s4">
+    <div class="slide-label">Primeiros Passos</div>
+    <h2 class="slide-h2">Como acessar o Gemini agora</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Abra o navegador</h3>
+        <p>Use Chrome, Edge ou Firefox no computador ou celular.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Acesse o endereço</h3>
+        <p>Digite o endereço abaixo na barra de navegação.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Entre com o Google</h3>
+        <p>Use sua conta Google pessoal ou institucional da escola.</p>
+      </div>
+    </div>
+    <div class="url-box">gemini.google.com</div>
+  </div>
+
+  <!-- SLIDE 5: O QUE É UM PROMPT -->
+  <div class="slide s-prompt" id="s5">
+    <div class="slide-label">Conceito Fundamental</div>
+    <h2 class="slide-h2">O que é um prompt — e como escrever bem</h2>
+    <div class="prompt-anatomy">
+      <span class="pa-context">Você é um especialista em educação básica brasileira.</span><span class="pa-label lbl-blue">contexto</span><br>
+      <span class="pa-task">Crie um plano de aula de Ciências para o 6º ano sobre o ciclo da água, com duração de 50 minutos.</span><span class="pa-label lbl-teal">tarefa</span><br>
+      <span class="pa-format">O plano deve ter: objetivo, materiais, desenvolvimento em 3 etapas e avaliação.</span><span class="pa-label lbl-purple">formato</span>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#7ab0f5"></div>Contexto: quem é a IA nessa conversa</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5cd8c9"></div>Tarefa: o que você quer</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b29dff"></div>Formato: como quer a resposta</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: PROMPT PLANO DE AULA -->
+  <div class="slide s-prompt-demo" id="s6">
+    <div class="slide-label">Prompt Pronto · Plano de Aula</div>
+    <h2 class="slide-h2">Copie, ajuste e use no Gemini</h2>
+    <div class="prompt-box">
+      <div class="prompt-topbar">
+        <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);margin-left:0.5rem">Gemini · Prompt</span>
+      </div>
+      <div class="prompt-code">
+        <span class="pc-comment">// Cole este prompt no Gemini e preencha as partes em amarelo</span><br><br>
+        Você é um especialista em educação básica brasileira.<br>
+        Crie um plano de aula para <span class="pc-var">[disciplina]</span>, turma do <span class="pc-var">[ano/série]</span>,<br>
+        com duração de <span class="pc-var">[X minutos]</span>.<br><br>
+        <span class="pc-key">Tema:</span> <span class="pc-var">[tema da aula]</span><br>
+        <span class="pc-key">Habilidade BNCC:</span> <span class="pc-var">[código, ex: EF06CI01]</span><br><br>
+        O plano deve conter: objetivo, materiais, desenvolvimento<br>
+        (introdução + desenvolvimento + fechamento) e avaliação.<br>
+        Use linguagem acessível e foco em atividades práticas.
+      </div>
+    </div>
+    <div class="result-preview">
+      <strong>💡 Dica — peça refinamentos depois:</strong>
+      "Agora adapte este plano para uma turma com alunos com dificuldades de leitura." ou "Adicione uma atividade de encerramento com tecnologia."
+    </div>
+  </div>
+
+  <!-- SLIDE 7: EXERCÍCIOS E PROVAS -->
+  <div class="slide" id="s7">
+    <div style="width:100%;max-width:900px">
+      <div class="slide-label">Mais Usos do Gemini</div>
+      <h2 class="slide-h2">Exercícios, provas e rubricas</h2>
+      <div class="s-two-col-cards">
+        <div class="mini-card">
+          <div class="mc-icon">📝</div>
+          <h3>Lista de Exercícios</h3>
+          <p>Gere questões variadas (múltipla escolha, dissertativa) com gabarito comentado.</p>
+          <div class="mc-prompt">
+            "Crie 10 exercícios sobre [tema] para o [ano]. Inclua gabarito."
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">📊</div>
+          <h3>Rubrica de Avaliação</h3>
+          <p>Tabela com critérios e níveis de desempenho para trabalhos e apresentações.</p>
+          <div class="mc-prompt">
+            "Crie uma rubrica em 4 níveis para avaliar [atividade]."
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">📋</div>
+          <h3>Questões de Prova</h3>
+          <p>Questões no estilo SARESP ou ENEM com texto motivador e alternativas.</p>
+          <div class="mc-prompt">
+            "Crie 5 questões estilo SARESP sobre [tema] com gabarito."
+          </div>
+        </div>
+        <div class="mini-card">
+          <div class="mc-icon">♿</div>
+          <h3>Adaptação de Materiais</h3>
+          <p>Versão simplificada do mesmo material para alunos com NEE ou defasagem.</p>
+          <div class="mc-prompt">
+            "Adapte este texto para um aluno com dislexia do 7º ano."
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: RUBRICA EXEMPLO -->
+  <div class="slide s-table" id="s8">
+    <div class="slide-label">Exemplo Gerado pelo Gemini</div>
+    <h2 class="slide-h2">Rubrica de avaliação — Apresentação oral</h2>
+    <table class="rubrica-table">
+      <thead>
+        <tr>
+          <th>Critério</th>
+          <th><span class="level lv-in">Insuficiente</span></th>
+          <th><span class="level lv-ba">Básico</span></th>
+          <th><span class="level lv-ad">Adequado</span></th>
+          <th><span class="level lv-av">Avançado</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Conteúdo</strong></td>
+          <td>Fora do tema ou muito incompleto</td>
+          <td>Aborda o tema superficialmente</td>
+          <td>Explica o tema com clareza</td>
+          <td>Aprofunda e relaciona com outros conteúdos</td>
+        </tr>
+        <tr>
+          <td><strong>Comunicação</strong></td>
+          <td>Inaudível ou difícil de entender</td>
+          <td>Lê o texto sem interagir</td>
+          <td>Fala com clareza e postura</td>
+          <td>Engaja o público, usa recursos visuais</td>
+        </tr>
+        <tr>
+          <td><strong>Organização</strong></td>
+          <td>Sem estrutura definida</td>
+          <td>Início e fim, sem desenvolvimento</td>
+          <td>Introdução, desenvolvimento e conclusão</td>
+          <td>Fluxo natural, transições claras</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SLIDE 9: DICAS -->
+  <div class="slide s-dicas" id="s9">
+    <div class="slide-label">Boas Práticas</div>
+    <h2 class="slide-h2">O que funciona — e o que evitar</h2>
+    <div class="dicas-grid">
+      <div class="dica-card dica-do">
+        <div class="dica-title">✔ Faça isso</div>
+        <ul>
+          <li>Informe ano, disciplina e contexto no prompt</li>
+          <li>Peça refinamentos progressivos</li>
+          <li>Use a IA como ponto de partida</li>
+          <li>Revise antes de usar em aula</li>
+          <li>Teste com um colega</li>
+        </ul>
+      </div>
+      <div class="dica-card dica-dont">
+        <div class="dica-title">✖ Evite isso</div>
+        <ul>
+          <li>Prompts vagos: "faça uma aula"</li>
+          <li>Usar sem ler o resultado</li>
+          <li>Confiar em datas e dados históricos</li>
+          <li>Enviar dados pessoais de alunos</li>
+          <li>Substituir o planejamento pedagógico</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: ATIVIDADE PRÁTICA -->
+  <div class="slide s-atividade" id="s10">
+    <div class="slide-label">Agora é com você!</div>
+    <h2 class="slide-h2">Atividade prática — 15 minutos</h2>
+    <div class="atividade-box">
+      <ol class="atividade-steps">
+        <li><div class="step-bubble">1</div>Escolha uma disciplina e um tema das próximas semanas.</li>
+        <li><div class="step-bubble">2</div>Abra o Gemini em gemini.google.com com sua conta Google.</li>
+        <li><div class="step-bubble">3</div>Use o prompt de plano de aula preenchendo seus dados.</li>
+        <li><div class="step-bubble">4</div>Leia o resultado e identifique 1 coisa que você ajustaria.</li>
+        <li><div class="step-bubble">5</div>Peça ao Gemini para fazer o ajuste.</li>
+        <li><div class="step-bubble">6</div>Compartilhe no fórum do curso com uma palavra da sua experiência.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: LIMITAÇÕES -->
+  <div class="slide s-limites" id="s11">
+    <div class="slide-label">Atenção!</div>
+    <h2 class="slide-h2">Limitações que você precisa conhecer</h2>
+    <div class="limites-list">
+      <div class="limite-row">
+        <div class="limite-icon">⚠️</div>
+        <div class="limite-text"><strong>Erros factuais</strong>A IA pode inventar datas, nomes, leis e dados. Sempre verifique informações críticas.</div>
+      </div>
+      <div class="limite-row">
+        <div class="limite-icon">📅</div>
+        <div class="limite-text"><strong>Desatualização</strong>Mesmo com acesso à web, nem sempre o conteúdo reflete as últimas versões da BNCC ou currículos estaduais.</div>
+      </div>
+      <div class="limite-row">
+        <div class="limite-icon">🎓</div>
+        <div class="limite-text"><strong>Sem contexto da turma</strong>A IA não conhece seus alunos. O professor é quem adapta para a realidade do dia a dia.</div>
+      </div>
+      <div class="limite-row">
+        <div class="limite-icon">🔒</div>
+        <div class="limite-text"><strong>Privacidade</strong>Nunca insira nomes, notas ou dados pessoais de alunos nos prompts. Essas informações vão para servidores externos.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ENCERRAMENTO -->
+  <div class="slide s-encerra" id="s12">
+    <div class="slide-label">Aula 1 · Concluída</div>
+    <div class="encerra-big">Você já sabe usar<br>o Gemini para ensinar.</div>
+    <p class="encerra-sub">Na próxima aula, vamos ver como o <strong>Microsoft Copilot</strong><br>pode ajudar na comunicação e gestão escolar.</p>
+    <div class="next-chips">
+      <span class="next-chip">📧 E-mails e comunicados</span>
+      <span class="next-chip">📝 Atas e relatórios</span>
+      <span class="next-chip">🗂 Gestão de turma</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress">
+  <div class="progress-fill" id="progressFill" style="width: 8.33%"></div>
+</div>
+
+<!-- NAV BAR -->
+<div class="nav">
+  <div class="nav-left">
+    <div>
+      <div class="nav-course">Curso IA para Professores</div>
+      <div class="nav-title">Aula 1 · IA para Materiais Didáticos · Gemini</div>
+    </div>
+  </div>
+  <div class="nav-controls">
+    <span class="nav-counter" id="counter">1 / 12</span>
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+  </div>
+</div>
+
+<div class="kbd-hint">← → teclas do teclado</div>
+
+<script>
+let current = 0;
+const total = 12;
+
+function changeSlide(dir) {
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit');
+  setTimeout(() => slides[current].classList.remove('exit'), 500);
+  current = Math.max(0, Math.min(total - 1, current + dir));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / total) * 100}%`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+
+const _MD = {};
+function regCard(el, d) {
+  el.classList.add('info-card');
+  const id = 'c'+Math.random().toString(36).slice(2,7);
+  _MD[id]=d; el.dataset.mid=id;
+  el.addEventListener('click',()=>openModal(id));
+  const hint=document.createElement('span');
+  hint.className='info-card-hint'; hint.textContent='🔍 clique para detalhes';
+  el.appendChild(hint);
+}
+function openModal(id) {
+  const d=_MD[id]; if(!d) return;
+  document.getElementById('mIcon').textContent=d.icon||'📌';
+  document.getElementById('mTitle').textContent=d.title;
+  document.getElementById('mSub').textContent=d.sub||'';
+  let h='';
+  if(d.def) h+=`<div><div class="modal-lbl">O que é</div><div class="modal-def">${d.def}</div></div>`;
+  if(d.ex)  h+=`<div><div class="modal-lbl">Exemplo real — sala de aula</div><div class="modal-ex">${d.ex}</div></div>`;
+  if(d.pr)  h+=`<div><div class="modal-lbl">Prompt para usar agora</div><div class="modal-prompt">${d.pr}</div></div>`;
+  if(d.tip) h+=`<div class="modal-tip">💡 ${d.tip}</div>`;
+  document.getElementById('mBody').innerHTML=h;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // SLIDE 3 — Features do Gemini
+  const feats = document.querySelectorAll('.col-visual .feature-row');
+  const featData = [
+    { icon:'🔤', title:'Processa texto e imagem', sub:'Multimodalidade',
+      def:'O Gemini entende português do Brasil com naturalidade, podendo receber imagens junto com o texto — por exemplo, uma foto de um exercício do livro para ser explicado.',
+      ex:'A professora Renata fotografa um mapa do livro de Geografia e cola no Gemini com a pergunta: "Descreva este mapa para um aluno cego do 7º ano". O Gemini gera uma descrição detalhada e acessível.',
+      pr:'Analise esta imagem e descreva o conteúdo como se estivesse explicando para um aluno do <span class="mv">[ano]</span> com deficiência visual. Seja detalhado e didático.',
+      tip:'No Gemini, você pode arrastar uma imagem diretamente para a caixa de texto ou usar o botão de anexo.' },
+    { icon:'🔗', title:'Integrado ao Google', sub:'Docs · Slides · Drive · Gmail',
+      def:'O Gemini está integrado a todos os produtos Google. No Google Docs, ele aparece como assistente lateral. No Gmail, ajuda a escrever e-mails. No Drive, resume documentos.',
+      ex:'O professor Fábio tem um Google Doc com o planejamento anual de Ciências. Ele abre o Gemini no Docs e pede: "transforme este planejamento em uma apresentação de slides com 10 lâminas". O Gemini cria o esboço direto no Google Slides.',
+      pr:'Transforme este planejamento de aula em uma apresentação com <span class="mv">[número]</span> slides. Cada slide deve ter: título, 3 pontos principais e sugestão de atividade.',
+      tip:'Para acessar o Gemini no Google Docs, clique no ícone ✦ no canto inferior direito do documento.' },
+    { icon:'🆓', title:'Gratuito', sub:'gemini.google.com',
+      def:'A versão básica do Gemini é completamente gratuita e não exige cadastro adicional para quem já tem conta Google. A versão avançada (Gemini Advanced) é paga mas não é necessária para uso educacional.',
+      ex:'A professora Silvana usa a conta Google pessoal para acessar o Gemini gratuitamente. Em 15 minutos de hora vaga, ela gera 3 planos de aula completos para a semana — sem pagar nada.',
+      pr:'',
+      tip:'Professores da rede estadual de SP já têm conta Google institucional (@edusp.net.br) — ela funciona diretamente no Gemini.' },
+    { icon:'🌐', title:'Acessa a web em tempo real', sub:'Informações atualizadas',
+      def:'Diferente de alguns outros modelos, o Gemini pode buscar informações na internet durante a conversa, trazendo dados atualizados sobre qualquer assunto — útil para conteúdos que mudam frequentemente.',
+      ex:'O professor de Atualidades Eduardo pede ao Gemini: "quais são as últimas notícias sobre mudanças climáticas adequadas para alunos do Ensino Médio?" O Gemini traz um resumo atualizado com links para fontes confiáveis.',
+      pr:'Pesquise as últimas notícias sobre <span class="mv">[tema]</span> e crie um resumo de 3 parágrafos adequado para alunos do <span class="mv">[ano]</span>. Inclua fontes confiáveis ao final.',
+      tip:'Quando o Gemini usa a web, ele indica a fonte logo abaixo da resposta — ensine os alunos a verificar essas fontes.' },
+  ];
+  feats.forEach((el,i)=>{ if(featData[i]) regCard(el, featData[i]); });
+
+  // SLIDE 7 — 4 mini-cards de tipos de material
+  const miniCards = document.querySelectorAll('.mini-card');
+  const miniData = [
+    { icon:'📝', title:'Plano de Aula', sub:'Com habilidade BNCC',
+      def:'O Gemini pode criar planos de aula completos respeitando a estrutura pedagógica brasileira, incluindo habilidades da BNCC, objetivos, desenvolvimento e avaliação — em qualquer disciplina.',
+      ex:'A professora Lúcia de Matemática precisa de um plano sobre frações para o 6º ano. Em 2 minutos, o Gemini entrega um plano com manipulação de materiais concretos, problema do cotidiano e avaliação formativa.',
+      pr:'Crie um plano de aula de <span class="mv">[disciplina]</span> para o <span class="mv">[ano]</span> sobre <span class="mv">[tema]</span>, com <span class="mv">[X]</span> minutos de duração. Inclua: objetivo, habilidade BNCC, materiais, 3 etapas de desenvolvimento e avaliação.',
+      tip:'Diga ao Gemini a realidade da sua escola: "turma com 40 alunos, poucos recursos, maioria sem internet em casa" — ele adapta o plano.' },
+    { icon:'📊', title:'Rubrica de Avaliação', sub:'4 níveis de desempenho',
+      def:'Rubricas são instrumentos que descrevem os critérios de avaliação e os níveis de desempenho esperados. O Gemini gera rubricas em formato de tabela com critérios definidos pelo professor.',
+      ex:'O professor de Ed. Física Wagner precisa avaliar apresentações de dança folclórica. Pede ao Gemini uma rubrica com critérios de ritmo, expressão, trabalho em equipe e criatividade — com 4 níveis cada. Pronto em 1 minuto.',
+      pr:'Crie uma rubrica de avaliação para <span class="mv">[tipo de atividade]</span> do <span class="mv">[ano]</span>. Critérios: <span class="mv">[liste 3-4 critérios]</span>. Níveis: Insuficiente, Básico, Adequado, Avançado. Formato: tabela.',
+      tip:'Peça ao Gemini para exportar a rubrica em formato de tabela Markdown — ela pode ser colada diretamente no Google Docs.' },
+    { icon:'📋', title:'Questões de Prova', sub:'Estilo SARESP/ENEM',
+      def:'O Gemini cria questões de múltipla escolha, dissertativas e de interpretação de texto no padrão das principais avaliações brasileiras, com gabarito e justificativa para cada alternativa.',
+      ex:'A professora de História Fernanda precisa de 10 questões sobre a Era Vargas no estilo ENEM para o 3º ano do Ensino Médio. O Gemini gera as questões com texto motivador, alternativas plausíveis e gabarito comentado.',
+      pr:'Crie <span class="mv">[número]</span> questões sobre <span class="mv">[tema]</span> para o <span class="mv">[ano]</span> no estilo <span class="mv">[SARESP/ENEM/múltipla escolha]</span>. Inclua texto motivador, 5 alternativas (A-E) e gabarito comentado.',
+      tip:'Para questões de múltipla escolha, peça ao Gemini para criar distratores plausíveis — erros comuns que os alunos cometem — para cada questão.' },
+    { icon:'♿', title:'Adaptação para NEE', sub:'Inclusão e acessibilidade',
+      def:'O Gemini adapta qualquer material didático para diferentes necessidades educacionais especiais: simplifica o vocabulário, ajusta a estrutura do texto, cria versões em linguagem visual ou adiciona apoios visuais.',
+      ex:'A professora Cláudia tem um aluno com dislexia no 8º ano. Ela cola um texto de Ciências e pede ao Gemini para adaptá-lo: frases curtas, vocabulário simples, marcadores visuais e espaço entre linhas maior.',
+      pr:'Adapte este texto para um aluno com <span class="mv">[necessidade: dislexia/TEA/baixa visão/deficiência intelectual]</span> do <span class="mv">[ano]</span>: <span class="mv">[cole o texto]</span>. Use frases curtas, vocabulário acessível e organize em tópicos visuais.',
+      tip:'Após adaptar, peça ao Gemini: "agora crie uma versão em formato de HQ ou infográfico descritivo deste mesmo conteúdo".' },
+  ];
+  miniCards.forEach((el,i)=>{ if(miniData[i]) regCard(el, miniData[i]); });
+
+  // SLIDE 9 — Ferramentas (tool-cards)
+  const toolCards = document.querySelectorAll('.tool-card');
+  const toolData = [
+    { icon:'💬', title:'ChatGPT', sub:'OpenAI · chat.openai.com',
+      def:'O ChatGPT é o modelo da OpenAI, pioneiro no mercado de IAs conversacionais. É muito utilizado para criação de textos, explicações detalhadas e geração de materiais educacionais.',
+      ex:'A professora Mônica usa o ChatGPT para criar histórias didáticas personalizadas. Pede: "escreva uma história sobre fotossíntese com personagens do cotidiano de uma criança do interior de SP, para o 5º ano".',
+      pr:'Escreva uma história didática sobre <span class="mv">[conceito científico]</span> com personagens do cotidiano de <span class="mv">[contexto regional]</span>, adequada para alunos do <span class="mv">[ano]</span>. Inclua moral da história relacionada ao conteúdo.',
+      tip:'O ChatGPT gratuito usa o modelo GPT-4o mini. Para o modelo completo (GPT-4o), é necessário conta Plus ($20/mês).' },
+    { icon:'✦', title:'Gemini', sub:'Google · gemini.google.com',
+      def:'O Gemini é o modelo de IA do Google, com acesso à internet em tempo real e integração nativa com Docs, Sheets, Slides e Gmail. Ideal para professores que já usam o ecossistema Google.',
+      ex:'O professor Gustavo usa o Gemini para pesquisar e criar ao mesmo tempo: pede uma aula sobre as últimas descobertas sobre buracos negros, e o Gemini traz informações atualizadas com fontes científicas.',
+      pr:'Pesquise as descobertas mais recentes sobre <span class="mv">[tema científico]</span> e crie uma aula de <span class="mv">[X]</span> minutos para o <span class="mv">[ano]</span>. Inclua fontes confiáveis e uma atividade de pesquisa para os alunos.',
+      tip:'Use o atalho @Gmail, @Drive ou @Docs dentro do Gemini para referenciar arquivos e e-mails diretamente na conversa.' },
+    { icon:'🤖', title:'Copilot', sub:'Microsoft · copilot.microsoft.com',
+      def:'O Copilot da Microsoft usa GPT-4 e está integrado ao pacote Office. Acesso gratuito pelo navegador, com busca na internet incluída. Ideal para quem usa Outlook e Teams na escola.',
+      ex:'A diretora Vera usa o Copilot integrado ao Outlook para processar 50 e-mails em 10 minutos — pedindo ao Copilot para resumir os assuntos e sugerir respostas padrão para os mais comuns.',
+      pr:'Leia este e-mail e sugira uma resposta profissional em até 5 linhas: <span class="mv">[cole o e-mail]</span>. Tom: <span class="mv">[cordial/formal/objetivo]</span>.',
+      tip:'O Copilot no Edge (navegador da Microsoft) tem acesso à internet e pode ler páginas abertas na aba atual — útil para resumir artigos.' },
+    { icon:'△', title:'Claude', sub:'Anthropic · claude.ai',
+      def:'Claude é o modelo da Anthropic, com destaque para textos longos e análises complexas. Tem uma das maiores janelas de contexto do mercado — aceita documentos inteiros em uma única conversa.',
+      ex:'A professora Tânia cola o livro didático inteiro (em PDF) no Claude e pede: "crie 5 atividades diferentes para cada capítulo, adaptadas para 3 níveis de dificuldade". O Claude processa tudo de uma vez.',
+      pr:'Analise este documento e crie atividades em 3 níveis (básico, intermediário, avançado) para os conceitos principais: <span class="mv">[cole o texto]</span>. Disciplina: <span class="mv">[disciplina]</span>, Ano: <span class="mv">[ano]</span>.',
+      tip:'O Claude é especialmente bom para feedback em redações: peça para avaliar com base em critérios específicos e ele dá comentários detalhados e construtivos.' },
+  ];
+  toolCards.forEach((el,i)=>{ if(toolData[i]) regCard(el, toolData[i]); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+});
+</script>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-icon-title">
+        <div class="modal-icon" id="mIcon">📄</div>
+        <div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
