@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 2 — Copilot · IA para Comunicação e Gestão</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&family=Bitter:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ms-blue: #0078d4;
+  --ms-light: #50b0f0;
+  --ms-navy: #003a70;
+  --ms-cyan: #00bcf2;
+  --bg: #f3f6fb;
+  --dark: #0d1b2a;
+  --mid: #1a2e44;
+  --white: #ffffff;
+  --slate: rgba(255,255,255,0.55);
+}
+body { font-family: 'Sora', sans-serif; background: var(--dark); color: var(--white); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+.slides { flex: 1; position: relative; overflow: hidden; }
+.slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 3rem; opacity: 0; transform: translateY(40px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; }
+.slide::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 90% 10%, rgba(0,120,212,0.15) 0%, transparent 70%), radial-gradient(ellipse 50% 60% at 10% 90%, rgba(0,188,242,0.08) 0%, transparent 70%); pointer-events: none; }
+.slide.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+.slide.exit { opacity: 0; transform: translateY(-40px); }
+.progress { height: 3px; background: rgba(255,255,255,0.06); flex-shrink: 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--ms-blue), var(--ms-cyan)); transition: width 0.4s ease; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 2rem; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.07); flex-shrink: 0; }
+.nav-info { font-size: 0.8rem; }
+.nav-course { color: rgba(255,255,255,0.35); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.1rem; }
+.nav-title { color: rgba(255,255,255,0.65); font-weight: 500; }
+.nav-controls { display: flex; align-items: center; gap: 1rem; }
+.nav-counter { font-size: 0.8rem; color: rgba(255,255,255,0.35); font-family: monospace; }
+.btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.45rem 1.1rem; border-radius: 6px; font-family: 'Sora', sans-serif; font-size: 0.82rem; cursor: pointer; transition: background 0.2s; }
+.btn:hover { background: rgba(0,120,212,0.25); border-color: var(--ms-blue); }
+.btn:disabled { opacity: 0.3; cursor: default; }
+.kbd-hint { position: fixed; bottom: 4.5rem; right: 1.5rem; font-size: 0.7rem; color: rgba(255,255,255,0.15); }
+
+/* SLIDE ELEMENTS */
+.slide-label { font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ms-cyan); margin-bottom: 0.7rem; }
+.slide-h2 { font-size: clamp(1.5rem, 3.5vw, 2.3rem); font-weight: 700; margin-bottom: 1.5rem; line-height: 1.2; }
+.body-text { font-size: 0.92rem; color: var(--slate); line-height: 1.7; margin-bottom: 1rem; }
+
+/* CAPA */
+.s-cover { text-align: center; }
+.copilot-logo { width: 70px; height: 70px; margin: 0 auto 2rem; }
+.cover-h1 { font-family: 'Bitter', serif; font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 600; line-height: 1.15; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 0%, #50b0f0 60%, #00bcf2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.cover-sub { font-size: 1rem; color: var(--slate); margin-bottom: 2rem; font-weight: 300; }
+.cover-chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.chip { padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.78rem; border: 1px solid; }
+.chip-blue { border-color: var(--ms-blue); color: var(--ms-light); background: rgba(0,120,212,0.1); }
+.chip-cyan { border-color: var(--ms-cyan); color: #7fdcf7; background: rgba(0,188,242,0.1); }
+
+/* AGENDA */
+.agenda-list { display: flex; flex-direction: column; gap: 0.7rem; width: 100%; max-width: 760px; }
+.agenda-row { display: grid; grid-template-columns: 76px 1fr; gap: 1rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.9rem 1.1rem; align-items: center; }
+.at { font-size: 0.75rem; color: var(--ms-cyan); font-weight: 600; font-family: monospace; }
+.ad { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+
+/* WHAT IS COPILOT */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 860px; }
+.feature-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 1.4rem; }
+.feature-card .fc-icon { font-size: 1.8rem; margin-bottom: 0.8rem; }
+.feature-card h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.4rem; }
+.feature-card p { font-size: 0.8rem; color: var(--slate); line-height: 1.5; }
+.highlight-box { background: rgba(0,120,212,0.1); border-left: 3px solid var(--ms-blue); border-radius: 0 8px 8px 0; padding: 0.9rem 1.1rem; font-size: 0.87rem; color: rgba(255,255,255,0.75); line-height: 1.5; margin-top: 1rem; }
+
+/* PROMPT BOX */
+.prompt-box { background: #0a1628; border: 1px solid rgba(0,120,212,0.3); border-radius: 12px; overflow: hidden; margin-top: 1.2rem; width: 100%; max-width: 820px; }
+.pb-bar { background: rgba(0,120,212,0.12); padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(0,120,212,0.2); }
+.pb-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pb-label { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-left: auto; }
+.pb-code { padding: 1.2rem 1.4rem; font-family: monospace; font-size: 0.82rem; line-height: 1.8; color: rgba(255,255,255,0.8); }
+.pc-var { color: #fbbc04; background: rgba(251,188,4,0.08); padding: 0 0.2rem; border-radius: 3px; }
+.pc-key { color: var(--ms-light); }
+.pc-comment { color: rgba(255,255,255,0.28); }
+.tip-bar { background: rgba(0,188,242,0.07); border-top: 1px solid rgba(0,188,242,0.15); padding: 0.7rem 1.2rem; font-size: 0.8rem; color: rgba(255,255,255,0.55); display: flex; gap: 0.5rem; align-items: flex-start; }
+
+/* USE CASES */
+.use-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: 100%; max-width: 860px; }
+.use-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 1.2rem; }
+.use-icon { font-size: 1.6rem; margin-bottom: 0.7rem; }
+.use-card h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.4rem; }
+.use-card p { font-size: 0.78rem; color: var(--slate); line-height: 1.4; }
+.use-prompt { margin-top: 0.7rem; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 0.5rem 0.7rem; font-family: monospace; font-size: 0.73rem; color: var(--ms-cyan); line-height: 1.5; }
+
+/* EMAIL EXEMPLO */
+.email-frame { background: #0a1628; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; width: 100%; max-width: 780px; }
+.email-header { background: rgba(0,120,212,0.12); padding: 1rem 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
+.email-field { display: flex; gap: 0.8rem; font-size: 0.8rem; margin-bottom: 0.3rem; }
+.ef-label { color: rgba(255,255,255,0.35); width: 40px; flex-shrink: 0; }
+.ef-value { color: rgba(255,255,255,0.75); }
+.email-body { padding: 1.2rem 1.4rem; font-size: 0.83rem; line-height: 1.7; color: rgba(255,255,255,0.7); }
+
+/* INTEGRACOES */
+.int-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; width: 100%; max-width: 800px; margin-top: 1.5rem; }
+.int-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 1.1rem 0.8rem; text-align: center; }
+.int-icon { font-size: 1.8rem; margin-bottom: 0.5rem; }
+.int-name { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; }
+.int-desc { font-size: 0.72rem; color: var(--slate); }
+.int-badge { display: inline-block; margin-top: 0.4rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.15rem 0.5rem; border-radius: 20px; }
+.badge-ms { background: rgba(0,120,212,0.15); color: var(--ms-light); }
+
+/* ATIVIDADE */
+.ativ-box { background: linear-gradient(135deg, rgba(0,120,212,0.12), rgba(0,188,242,0.07)); border: 1px solid rgba(0,120,212,0.25); border-radius: 14px; padding: 1.8rem; width: 100%; max-width: 780px; margin-top: 1.5rem; }
+.ativ-steps { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.ativ-steps li { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.88rem; color: rgba(255,255,255,0.8); line-height: 1.5; }
+.sb { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--ms-blue), var(--ms-cyan)); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 0.05rem; }
+
+/* DICAS */
+.dicas-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 820px; margin-top: 1.5rem; }
+.dc { border-radius: 12px; padding: 1.2rem; font-size: 0.85rem; }
+.dc-do { background: rgba(0,188,242,0.07); border: 1px solid rgba(0,188,242,0.18); }
+.dc-dont { background: rgba(255,100,80,0.07); border: 1px solid rgba(255,100,80,0.18); }
+.dc-title { font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.7rem; }
+.dc-do .dc-title { color: var(--ms-cyan); }
+.dc-dont .dc-title { color: #ff8070; }
+.dc ul { padding-left: 1.1rem; }
+.dc li { margin-bottom: 0.4rem; color: rgba(255,255,255,0.7); }
+
+/* ENCERRA */
+.s-encerra { text-align: center; }
+.enc-big { font-family: 'Bitter', serif; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 600; line-height: 1.2; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #50b0f0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.enc-sub { font-size: 0.95rem; color: var(--slate); margin-bottom: 2rem; line-height: 1.6; }
+.next-chips { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+.nc { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.55rem 1rem; font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 768px) {
+  body { height: auto; overflow-y: auto; }
+  .slides { flex: none; height: auto; overflow: visible; position: static; }
+  .slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: none;
+    padding: 1.5rem 1rem 2rem;
+    min-height: 80svh;
+    justify-content: flex-start;
+    padding-top: 1.8rem;
+  }
+  .slide.active { display: flex; }
+  .slide::before { display: none; }
+  .progress { position: sticky; top: 0; z-index: 10; }
+  .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.7rem 1rem; }
+  .nav-info { width: 100%; }
+  .nav-controls { width: 100%; justify-content: flex-end; }
+  .kbd-hint { display: none; }
+  .slide-label { font-size: 0.65rem; }
+  .slide-h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .body-text { font-size: 0.86rem; }
+  .agenda-list { gap: 0.5rem; }
+  .agenda-row { grid-template-columns: 60px 1fr; gap: 0.6rem; padding: 0.7rem 0.9rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .use-grid { grid-template-columns: 1fr; }
+  .dicas-cols { grid-template-columns: 1fr; }
+  .int-grid { grid-template-columns: repeat(2, 1fr); }
+  .prompt-box { font-size: 0.75rem; }
+  .pb-code { font-size: 0.75rem; padding: 1rem; }
+  .email-frame { font-size: 0.78rem; }
+  .ativ-box { padding: 1.2rem; }
+  .ativ-steps li { font-size: 0.83rem; }
+  .enc-big { font-size: 1.6rem; }
+  .enc-sub { font-size: 0.85rem; }
+  .next-chips { flex-wrap: wrap; justify-content: center; }
+  .cover-h1 { font-size: 1.8rem; }
+  .copilot-logo { width: 54px; height: 54px; }
+}
+
+
+/* ===== MODAL INTERATIVO ===== */
+.info-card { cursor: pointer; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; position: relative; }
+.info-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.info-card-hint { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.35; margin-top: 0.6rem; display: block; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center; padding: 1.2rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: #101c2a; border: 1px solid rgba(0,120,212,0.25); border-radius: 16px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; animation: mIn 0.28s ease; }
+@keyframes mIn { from { opacity:0; transform: scale(0.94) translateY(14px); } to { opacity:1; transform: scale(1) translateY(0); } }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.3rem 1.4rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.07); gap: 0.8rem; }
+.modal-icon-title { display: flex; align-items: center; gap: 0.8rem; }
+.modal-icon { font-size: 2rem; flex-shrink: 0; }
+.modal-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+.modal-sub { font-size: 0.73rem; opacity: 0.4; margin-top: 0.2rem; }
+.modal-close { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s; }
+.modal-close:hover { background: rgba(255,255,255,0.15); }
+.modal-body { padding: 1.2rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.modal-lbl { font-size: 0.63rem; text-transform: uppercase; letter-spacing: 0.13em; color: #50b0f0; font-weight: 600; margin-bottom: 0.3rem; }
+.modal-def { font-size: 0.87rem; line-height: 1.65; opacity: 0.82; }
+.modal-ex { background: rgba(0,120,212,0.07); border-left: 3px solid #0078d4; border-radius: 0 8px 8px 0; padding: 0.85rem 1rem; font-size: 0.83rem; line-height: 1.6; opacity: 0.88; }
+.modal-prompt { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 0.85rem 1rem; font-family: monospace; font-size: 0.77rem; line-height: 1.75; color: rgba(255,255,255,0.72); }
+.modal-prompt .mv { color: #fdd663; background: rgba(251,188,4,0.1); padding: 0 0.15rem; border-radius: 2px; }
+.modal-tip { font-size: 0.79rem; opacity: 0.5; line-height: 1.5; }
+@media (max-width: 600px) { .modal-box { max-height: 92vh; } .modal-header,.modal-body { padding-left: 1rem; padding-right: 1rem; } }
+
+</style>
+</head>
+<body>
+<div class="slides" id="slides">
+
+  <!-- SLIDE 1: CAPA -->
+  <div class="slide s-cover active" id="s1">
+    <div class="copilot-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cg1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#0078d4"/>
+            <stop offset="100%" stop-color="#00bcf2"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="45" fill="url(#cg1)" opacity="0.15" stroke="url(#cg1)" stroke-width="1.5"/>
+        <path d="M30 38 C30 28, 70 28, 70 38 L70 55 C70 65, 55 72, 50 74 C45 72, 30 65, 30 55 Z" fill="url(#cg1)" opacity="0.9"/>
+        <circle cx="42" cy="47" r="5" fill="white" opacity="0.9"/>
+        <circle cx="58" cy="47" r="5" fill="white" opacity="0.9"/>
+        <path d="M42 58 Q50 64 58 58" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="slide-label">Curso IA para Professores · Aula 2 de 5</div>
+    <h1 class="cover-h1">IA para Comunicação<br>e Gestão Escolar</h1>
+    <div class="cover-sub">Usando o Microsoft Copilot para agilizar o trabalho administrativo</div>
+    <div class="cover-chips">
+      <span class="chip chip-blue">⏱ 1 hora</span>
+      <span class="chip chip-cyan">💻 Online / EAD</span>
+      <span class="chip chip-blue">🤖 Powered by Copilot</span>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: AGENDA -->
+  <div class="slide" id="s2">
+    <div style="width:100%;max-width:760px">
+      <div class="slide-label">Agenda da Aula</div>
+      <h2 class="slide-h2">O que vamos fazer hoje?</h2>
+      <div class="agenda-list">
+        <div class="agenda-row"><div class="at">0–10 min</div><div class="ad">Apresentação do Copilot e integração com Microsoft 365</div></div>
+        <div class="agenda-row"><div class="at">10–22 min</div><div class="ad">E-mails, comunicados e avisos com IA</div></div>
+        <div class="agenda-row"><div class="at">22–38 min</div><div class="ad">Atas de reunião, relatórios e documentos administrativos</div></div>
+        <div class="agenda-row"><div class="at">38–50 min</div><div class="ad">Gestão de turma: respostas a pais, comunicação institucional</div></div>
+        <div class="agenda-row"><div class="at">50–60 min</div><div class="ad">Atividade prática e encerramento</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: O QUE É COPILOT -->
+  <div class="slide" id="s3">
+    <div style="width:100%;max-width:880px">
+      <div class="slide-label">Ferramenta da Aula</div>
+      <h2 class="slide-h2">O que é o Microsoft Copilot?</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="fc-icon">🏢</div>
+          <h3>IA da Microsoft</h3>
+          <p>Assistente baseado em GPT-4, integrado a todo o ecossistema Microsoft 365.</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">🔗</div>
+          <h3>Integrado ao Office</h3>
+          <p>Funciona dentro do Word, Outlook, Teams, OneNote e Excel.</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">🌐</div>
+          <h3>Versão gratuita na web</h3>
+          <p>Disponível em copilot.microsoft.com sem precisar de conta paga.</p>
+        </div>
+        <div class="feature-card">
+          <div class="fc-icon">🔒</div>
+          <h3>Foco em privacidade</h3>
+          <p>Na versão corporativa, os dados ficam dentro do ambiente Microsoft da instituição.</p>
+        </div>
+      </div>
+      <div class="highlight-box">✦ Quem usa o e-mail Outlook da escola já tem acesso ao Copilot básico integrado — sem instalar nada.</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: ACESSO -->
+  <div class="slide" id="s4">
+    <div style="width:100%;max-width:780px">
+      <div class="slide-label">Como Acessar</div>
+      <h2 class="slide-h2">Três formas de usar o Copilot</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem">
+        <div class="use-card" style="text-align:center">
+          <div class="use-icon">🌐</div>
+          <h3>Navegador</h3>
+          <p>Acesse copilot.microsoft.com — funciona como o ChatGPT, direto no browser.</p>
+          <div class="use-prompt">copilot.microsoft.com</div>
+        </div>
+        <div class="use-card" style="text-align:center">
+          <div class="use-icon">📧</div>
+          <h3>Outlook</h3>
+          <p>Botão "Copilot" aparece ao escrever ou ler e-mails no Outlook web.</p>
+          <div class="use-prompt">outlook.office.com</div>
+        </div>
+        <div class="use-card" style="text-align:center">
+          <div class="use-icon">💬</div>
+          <h3>Teams</h3>
+          <p>No chat do Teams, acione o Copilot para resumir conversas e reuniões.</p>
+          <div class="use-prompt">teams.microsoft.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: PROMPT EMAIL -->
+  <div class="slide" id="s5">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Prompt Pronto · E-mail</div>
+      <h2 class="slide-h2">Escrevendo e-mails e comunicados</h2>
+      <div class="prompt-box">
+        <div class="pb-bar">
+          <div class="pb-dot" style="background:#ea4335"></div>
+          <div class="pb-dot" style="background:#fbbc04"></div>
+          <div class="pb-dot" style="background:#34a853"></div>
+          <span class="pb-label">Copilot · Prompt</span>
+        </div>
+        <div class="pb-code">
+          <span class="pc-comment">// Use no Copilot (copilot.microsoft.com) ou no Outlook</span><br><br>
+          Escreva um <span class="pc-var">[e-mail / comunicado / aviso]</span> para <span class="pc-var">[destinatários: pais, alunos, equipe]</span><br>
+          sobre <span class="pc-var">[assunto]</span>.<br><br>
+          <span class="pc-key">Tom:</span> <span class="pc-var">[formal / cordial / informativo]</span><br>
+          <span class="pc-key">Tamanho:</span> <span class="pc-var">[curto (5 linhas) / médio (1 parágrafo) / completo]</span><br>
+          <span class="pc-key">Inclua:</span> <span class="pc-var">[informações específicas: data, local, ação esperada]</span><br><br>
+          Assine como: <span class="pc-var">[Professor(a) / Coordenação / Direção]</span>
+        </div>
+        <div class="tip-bar">💡 Refine: "Reescreva o e-mail em tom mais acolhedor para pais que não responderam anteriormente."</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: EXEMPLO EMAIL -->
+  <div class="slide" id="s6">
+    <div style="width:100%;max-width:780px">
+      <div class="slide-label">Exemplo Real</div>
+      <h2 class="slide-h2">E-mail gerado pelo Copilot</h2>
+      <div class="email-frame">
+        <div class="email-header">
+          <div class="email-field"><span class="ef-label">Para:</span><span class="ef-value">Responsáveis da Turma 8ºA</span></div>
+          <div class="email-field"><span class="ef-label">De:</span><span class="ef-value">Prof. [Nome] &lt;professor@escola.sp.gov.br&gt;</span></div>
+          <div class="email-field"><span class="ef-label">Assunto:</span><span class="ef-value">Reunião de pais e mestres — 25 de abril</span></div>
+        </div>
+        <div class="email-body">
+          Prezados responsáveis,<br><br>
+          Informamos que a reunião de pais e mestres do 8º ano A ocorrerá no dia <strong>25 de abril (sexta-feira), às 19h</strong>, na sala 12 da escola.<br><br>
+          Nessa ocasião, discutiremos o desempenho bimestral dos alunos, as atividades previstas para o próximo bimestre e esclareceremos dúvidas sobre o calendário escolar.<br><br>
+          Contamos com a presença de todos. Em caso de impossibilidade, favor entrar em contato pela agenda do aluno.<br><br>
+          Atenciosamente,<br>
+          <span style="color:var(--ms-light)">Prof. [Nome] — 8ºA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: OUTROS USOS -->
+  <div class="slide" id="s7">
+    <div style="width:100%;max-width:880px">
+      <div class="slide-label">Mais Aplicações</div>
+      <h2 class="slide-h2">O Copilot além dos e-mails</h2>
+      <div class="use-grid">
+        <div class="use-card">
+          <div class="use-icon">📋</div>
+          <h3>Ata de Reunião</h3>
+          <p>Cole os tópicos discutidos e peça uma ata formal com responsáveis e prazos.</p>
+          <div class="use-prompt">"Crie uma ata da reunião com os pontos: [lista]"</div>
+        </div>
+        <div class="use-card">
+          <div class="use-icon">📊</div>
+          <h3>Relatório Bimestral</h3>
+          <p>Gere relatório de desempenho de turma a partir de anotações simples.</p>
+          <div class="use-prompt">"Escreva um relatório de turma com base em: [notas]"</div>
+        </div>
+        <div class="use-card">
+          <div class="use-icon">📅</div>
+          <h3>Planejamento Semanal</h3>
+          <p>Organize a semana pedagógica com agenda de atividades por turma.</p>
+          <div class="use-prompt">"Monte uma agenda semanal para [X turmas] com [atividades]"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: INTEGRACOES -->
+  <div class="slide" id="s8">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Ecossistema Microsoft</div>
+      <h2 class="slide-h2">Copilot integrado às ferramentas que você já usa</h2>
+      <div class="int-grid">
+        <div class="int-card">
+          <div class="int-icon">📄</div>
+          <div class="int-name">Word</div>
+          <div class="int-desc">Redigir, resumir e melhorar documentos</div>
+          <span class="int-badge badge-ms">Microsoft</span>
+        </div>
+        <div class="int-card">
+          <div class="int-icon">📧</div>
+          <div class="int-name">Outlook</div>
+          <div class="int-desc">Responder e redigir e-mails com IA</div>
+          <span class="int-badge badge-ms">Microsoft</span>
+        </div>
+        <div class="int-card">
+          <div class="int-icon">💬</div>
+          <div class="int-name">Teams</div>
+          <div class="int-desc">Resumir reuniões e chats</div>
+          <span class="int-badge badge-ms">Microsoft</span>
+        </div>
+        <div class="int-card">
+          <div class="int-icon">📊</div>
+          <div class="int-name">Excel</div>
+          <div class="int-desc">Analisar dados e criar fórmulas</div>
+          <span class="int-badge badge-ms">Microsoft</span>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top:1.2rem">✦ Nas versões gratuitas, o Copilot funciona via copilot.microsoft.com — basta ter conta Microsoft (Hotmail/Outlook pessoal).</div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: DICAS -->
+  <div class="slide" id="s9">
+    <div style="width:100%;max-width:820px">
+      <div class="slide-label">Boas Práticas</div>
+      <h2 class="slide-h2">O que funciona — e o que evitar</h2>
+      <div class="dicas-cols">
+        <div class="dc dc-do">
+          <div class="dc-title">✔ Faça isso</div>
+          <ul>
+            <li>Dê contexto: quem escreve, para quem, sobre o quê</li>
+            <li>Especifique o tom: formal, cordial, objetivo</li>
+            <li>Peça ajustes: "torne mais curto" ou "adicione urgência"</li>
+            <li>Revise sempre antes de enviar</li>
+            <li>Use como rascunho, não como texto final</li>
+          </ul>
+        </div>
+        <div class="dc dc-dont">
+          <div class="dc-title">✖ Evite isso</div>
+          <ul>
+            <li>Enviar sem ler — pode conter informações erradas</li>
+            <li>Incluir dados sensíveis de alunos no prompt</li>
+            <li>Tom muito formal para comunicação com alunos</li>
+            <li>Copiar textos de documentos oficiais sem verificar</li>
+            <li>Depender 100% da IA para comunicação de crise</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: ATIVIDADE -->
+  <div class="slide" id="s10">
+    <div style="width:100%;max-width:760px">
+      <div class="slide-label">Agora é com você!</div>
+      <h2 class="slide-h2">Atividade prática — 15 minutos</h2>
+      <div class="ativ-box">
+        <ol class="ativ-steps">
+          <li><div class="sb">1</div>Acesse copilot.microsoft.com (ou Outlook, se disponível).</li>
+          <li><div class="sb">2</div>Escolha uma situação real: aviso de reunião, comunicado de atividade ou resposta a responsável.</li>
+          <li><div class="sb">3</div>Use o prompt de e-mail desta aula, preenchendo com seus dados.</li>
+          <li><div class="sb">4</div>Peça ao Copilot para ajustar o tom: "reescreva de forma mais acolhedora".</li>
+          <li><div class="sb">5</div>Compare as duas versões e escolha a que você usaria.</li>
+          <li><div class="sb">6</div>Compartilhe no fórum do curso: qual situação você resolveu?</div></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: LIMITACOES -->
+  <div class="slide" id="s11">
+    <div style="width:100%;max-width:800px">
+      <div class="slide-label">Atenção!</div>
+      <h2 class="slide-h2">O que o Copilot não faz por você</h2>
+      <div style="display:flex;flex-direction:column;gap:0.8rem;margin-top:1.5rem">
+        <div class="agenda-row"><div style="font-size:1.3rem">⚠️</div><div class="ad"><strong>Não conhece as normas da rede estadual</strong><br><span style="font-size:0.82rem;color:rgba(255,255,255,0.5)">Verifique se o texto segue as diretrizes da Secretaria de Educação SP.</span></div></div>
+        <div class="agenda-row"><div style="font-size:1.3rem">🧠</div><div class="ad"><strong>Não tem contexto emocional da turma</strong><br><span style="font-size:0.82rem;color:rgba(255,255,255,0.5)">Para comunicações sensíveis (faltas, indisciplina), adapte o texto com cuidado.</span></div></div>
+        <div class="agenda-row"><div style="font-size:1.3rem">🔒</div><div class="ad"><strong>Não use dados pessoais de alunos</strong><br><span style="font-size:0.82rem;color:rgba(255,255,255,0.5)">Nomes, notas individuais e situações específicas devem ser inseridos só na revisão final.</span></div></div>
+        <div class="agenda-row"><div style="font-size:1.3rem">✍️</div><div class="ad"><strong>A voz final é sempre sua</strong><br><span style="font-size:0.82rem;color:rgba(255,255,255,0.5)">A IA é um rascunhador — a responsabilidade da comunicação é do professor.</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ENCERRAMENTO -->
+  <div class="slide s-encerra" id="s12">
+    <div class="slide-label">Aula 2 · Concluída</div>
+    <div class="enc-big">Comunicação mais ágil,<br>mais tempo para ensinar.</div>
+    <p class="enc-sub">Na próxima aula, vamos ver como usar o <strong>DeepSeek</strong><br>para engajar alunos diretamente na sala de aula.</p>
+    <div class="next-chips">
+      <span class="nc">🎓 Atividades interativas</span>
+      <span class="nc">💬 IA como tutor de alunos</span>
+      <span class="nc">🔍 Pesquisa mediada</span>
+    </div>
+  </div>
+
+</div>
+<div class="progress"><div class="progress-fill" id="progressFill" style="width:8.33%"></div></div>
+<div class="nav">
+  <div class="nav-info">
+    <div class="nav-course">Curso IA para Professores</div>
+    <div class="nav-title">Aula 2 · IA para Comunicação e Gestão · Copilot</div>
+  </div>
+  <div class="nav-controls">
+    <span class="nav-counter" id="counter">1 / 12</span>
+    <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>← Anterior</button>
+    <button class="btn" id="nextBtn" onclick="changeSlide(1)">Próximo →</button>
+  </div>
+</div>
+<div class="kbd-hint">← → teclas do teclado</div>
+<script>
+let current = 0; const total = 12;
+function changeSlide(dir) {
+  const slides = document.querySelectorAll('.slide');
+  slides[current].classList.remove('active'); slides[current].classList.add('exit');
+  setTimeout(() => slides[current].classList.remove('exit'), 450);
+  current = Math.max(0, Math.min(total - 1, current + dir));
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((current + 1) / total) * 100}%`;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== MODAL =====
+const _MD = {};
+function regCard(el, d) {
+  el.classList.add('info-card');
+  const id = 'c' + Math.random().toString(36).slice(2,7);
+  _MD[id] = d; el.dataset.mid = id;
+  el.addEventListener('click', ()=>openModal(id));
+  const hint = document.createElement('span');
+  hint.className = 'info-card-hint'; hint.textContent = '🔍 clique para detalhes';
+  el.appendChild(hint);
+}
+function openModal(id) {
+  const d = _MD[id]; if(!d) return;
+  document.getElementById('mIcon').textContent = d.icon||'📌';
+  document.getElementById('mTitle').textContent = d.title;
+  document.getElementById('mSub').textContent = d.sub||'';
+  let h = '';
+  if(d.def) h += `<div><div class="modal-lbl">O que é</div><div class="modal-def">${d.def}</div></div>`;
+  if(d.ex)  h += `<div><div class="modal-lbl">Exemplo real — sala de aula</div><div class="modal-ex">${d.ex}</div></div>`;
+  if(d.pr)  h += `<div><div class="modal-lbl">Prompt para usar agora</div><div class="modal-prompt">${d.pr}</div></div>`;
+  if(d.tip) h += `<div class="modal-tip">💡 ${d.tip}</div>`;
+  document.getElementById('mBody').innerHTML = h;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+// ===== REGISTRAR CARDS =====
+document.addEventListener('DOMContentLoaded', () => {
+
+  // SLIDE 3 — Features do Copilot
+  const feat = document.querySelectorAll('.feature-card');
+  const featData = [
+    { icon:'🏢', title:'IA da Microsoft', sub:'Microsoft Copilot',
+      def:'O Copilot é o assistente de IA da Microsoft, construído sobre o modelo GPT-4 da OpenAI. Ele está embutido no ecossistema Microsoft 365 e pode ser acessado também pelo navegador em copilot.microsoft.com.',
+      ex:'A professora Maria precisa escrever um relatório sobre o desempenho da turma 7ºB. Em vez de começar do zero, ela abre o Copilot, descreve as notas e pede um relatório formatado — pronto em 2 minutos.',
+      pr:'Você é um assistente pedagógico. Crie um relatório de desempenho para a turma <span class="mv">[turma]</span> do <span class="mv">[bimestre]</span>. As médias são: <span class="mv">[notas]</span>. Tom: profissional e objetivo.',
+      tip:'Use a versão gratuita em copilot.microsoft.com — funciona com qualquer conta Microsoft (Hotmail, Outlook pessoal).' },
+    { icon:'🔗', title:'Integrado ao Office', sub:'Word · Outlook · Teams · Excel',
+      def:'O Copilot está embutido dentro dos aplicativos Microsoft que você já usa. No Outlook ele aparece ao escrever e-mails, no Word ao editar documentos, no Teams ao participar de reuniões.',
+      ex:'O professor João está em uma reunião no Teams. Ao final, clica em "Resumir reunião" no Copilot — ele gera automaticamente os pontos discutidos, as decisões tomadas e os responsáveis por cada ação.',
+      pr:'Resuma esta reunião em tópicos: <span class="mv">[cole o texto ou pontos discutidos]</span>. Inclua: decisões tomadas, responsáveis e próximos passos.',
+      tip:'Na versão web do Outlook (outlook.office.com), o botão do Copilot aparece na barra ao escrever uma nova mensagem.' },
+    { icon:'🌐', title:'Versão gratuita na web', sub:'copilot.microsoft.com',
+      def:'A versão gratuita do Copilot funciona diretamente no navegador, sem precisar do Microsoft 365 pago. Basta ter uma conta Microsoft (Hotmail ou Outlook pessoal) para acessar.',
+      ex:'A professora Ana não tem licença do Office 365 na escola. Ela acessa copilot.microsoft.com pelo celular durante o intervalo e gera um comunicado para os pais sobre a festa junina — sem instalar nada.',
+      pr:'Crie um comunicado informal para os pais sobre <span class="mv">[evento/situação]</span> da turma <span class="mv">[turma]</span>. Tom cordial, máximo 5 linhas.',
+      tip:'O Copilot gratuito já inclui acesso à internet em tempo real — ele pode buscar informações atuais, diferente de algumas outras IAs.' },
+    { icon:'🔒', title:'Foco em privacidade', sub:'Dados protegidos',
+      def:'Na versão corporativa (Microsoft 365 Education), os dados ficam dentro do ambiente Microsoft da instituição e não são usados para treinar o modelo. Isso é relevante para escolas que precisam de conformidade com a LGPD.',
+      ex:'A coordenadora Paula usa o Copilot para processar atas de reuniões pedagógicas. Por usar a conta institucional da escola (Microsoft 365 Education), os dados não saem do ambiente escolar.',
+      pr:'',
+      tip:'Mesmo na versão gratuita, evite inserir dados pessoais de alunos como nomes completos, CPF ou informações médicas. Use sempre dados fictícios ou genéricos nos prompts.' },
+  ];
+  feat.forEach((el, i) => { if(featData[i]) regCard(el, featData[i]); });
+
+  // SLIDE 4 — Três formas de usar
+  const usecards = document.querySelectorAll('.use-card');
+  const useData = [
+    { icon:'🌐', title:'Via Navegador', sub:'copilot.microsoft.com',
+      def:'A forma mais simples de acessar o Copilot: abra qualquer navegador, acesse copilot.microsoft.com e entre com sua conta Microsoft. Funciona exatamente como o ChatGPT.',
+      ex:'O professor Carlos está no computador da sala dos professores. Ele abre o Chrome, acessa copilot.microsoft.com e usa para gerar 5 questões de revisão de Português para a prova de sexta-feira.',
+      pr:'Crie <span class="mv">[número]</span> questões de revisão sobre <span class="mv">[tema]</span> para alunos do <span class="mv">[ano]</span>. Inclua gabarito no final.',
+      tip:'Você pode usar o Copilot sem conta no modo visitante, mas com conta Microsoft você tem histórico de conversas.' },
+    { icon:'📧', title:'No Outlook', sub:'Direto no e-mail',
+      def:'Dentro do Outlook web (outlook.office.com), o Copilot aparece como um botão ao compor uma nova mensagem. Ele pode escrever, resumir ou ajustar o tom de qualquer e-mail.',
+      ex:'A professora Sandra recebe um e-mail agressivo de um pai. Antes de responder, ela clica em "Copilot" e pede: "ajude-me a responder este e-mail de forma profissional e acolhedora, mantendo firmeza". Ela adapta a sugestão e envia.',
+      pr:'Responda este e-mail de forma <span class="mv">[profissional/acolhedora/firme]</span>: <span class="mv">[cole o e-mail recebido]</span>. Mantenha tom respeitoso e inclua solução ou próximo passo.',
+      tip:'No Outlook, você também pode pedir ao Copilot para "resumir esta conversa de e-mail" quando há muitas mensagens trocadas.' },
+    { icon:'💬', title:'No Teams', sub:'Em reuniões e chats',
+      def:'No Microsoft Teams, o Copilot participa de reuniões e resume automaticamente o que foi discutido, identifica decisões tomadas e aponta itens de ação para cada participante.',
+      ex:'A coordenadora Lúcia facilita uma reunião pedagógica de 1 hora no Teams. Ao final, pede ao Copilot "o que ficou decidido sobre o calendário de avaliações?" — ele responde citando os trechos específicos da reunião.',
+      pr:'Com base na reunião de hoje, liste: 1) Decisões tomadas, 2) Responsáveis por cada ação, 3) Prazo estimado. Formato: tabela simples.',
+      tip:'O Copilot no Teams só está disponível com licença Microsoft 365 Education ou Business. Verifique com a TI da sua escola.' },
+  ];
+  // Só os 3 primeiros use-cards do slide 4
+  const slide4cards = document.querySelectorAll('#s4 .use-card');
+  slide4cards.forEach((el, i) => { if(useData[i]) regCard(el, useData[i]); });
+
+  // SLIDE 7 — Mais aplicações
+  const moreData = [
+    { icon:'📋', title:'Ata de Reunião', sub:'Gestão escolar com IA',
+      def:'O Copilot transforma anotações brutas em atas formais, com estrutura profissional, responsáveis e prazos definidos. Economiza 20 a 30 minutos por reunião.',
+      ex:'A vice-diretora Ana cola no Copilot os tópicos discutidos em uma reunião de HTPC: "falamos sobre recuperação de alunos, festa junina e horário de reforço". O Copilot gera uma ata formal com data, pauta, deliberações e encaminhamentos.',
+      pr:'Crie uma ata formal da reunião de <span class="mv">[data]</span> com os seguintes tópicos discutidos: <span class="mv">[liste os tópicos]</span>. Inclua: data, participantes (deixar em branco), deliberações e encaminhamentos com responsáveis.',
+      tip:'Após gerar, peça: "Adicione uma seção de próxima reunião prevista para [data]" para completar o documento.' },
+    { icon:'📊', title:'Relatório Bimestral', sub:'Análise de desempenho',
+      def:'A partir de dados simples de notas e observações, o Copilot gera relatórios narrativos de desempenho de turma, individuais ou comparativos entre bimestres.',
+      ex:'O professor Ricardo cola as médias do 2º bimestre da turma 9ºA (sem nomes reais). O Copilot identifica que 30% estão abaixo da média em Matemática e sugere uma estratégia de intervenção com foco nos conteúdos de equações.',
+      pr:'Analise os dados de desempenho desta turma do <span class="mv">[bimestre]</span>: <span class="mv">[médias por área]</span>. Gere um parágrafo de análise e 3 sugestões de intervenção pedagógica.',
+      tip:'Use dados sem nomes — substitua por "Aluno A, Aluno B" para proteger a privacidade dos estudantes.' },
+    { icon:'📅', title:'Planejamento Semanal', sub:'Organização do professor',
+      def:'O Copilot ajuda a organizar a semana pedagógica com grade de horários, sequência de atividades e lembretes de prazos — a partir de uma descrição simples do que precisa ser feito.',
+      ex:'A professora Fátima precisa organizar a semana com 5 turmas diferentes. Ela descreve as atividades previstas para cada uma e o Copilot gera uma agenda semanal formatada, com colunas por dia e linha por turma.',
+      pr:'Monte uma agenda semanal para <span class="mv">[número]</span> turmas. Turmas: <span class="mv">[lista]</span>. Atividades previstas: <span class="mv">[descreva]</span>. Formato: tabela com dias da semana nas colunas.',
+      tip:'Peça ao Copilot para exportar a agenda como tabela — você pode colar direto no Word ou Google Docs.' },
+  ];
+  const slide7cards = document.querySelectorAll('#s7 .use-card');
+  slide7cards.forEach((el, i) => { if(moreData[i]) regCard(el, moreData[i]); });
+
+  // SLIDE 8 — Integrações (Word, Outlook, Teams, Excel)
+  const intData = [
+    { icon:'📄', title:'Word com Copilot', sub:'Documentos inteligentes',
+      def:'Dentro do Microsoft Word, o Copilot pode redigir documentos do zero, resumir textos longos, sugerir melhorias de escrita e reescrever trechos com tom diferente — tudo sem sair do editor.',
+      ex:'A professora Beatriz precisa entregar um projeto pedagógico de 3 páginas. Ela abre o Word, descreve o que quer no Copilot e recebe um rascunho completo com introdução, objetivos e metodologia. Ela revisa e personaliza o texto.',
+      pr:'Escreva um projeto pedagógico sobre <span class="mv">[tema]</span> para alunos do <span class="mv">[ano]</span>. Inclua: justificativa, objetivos, metodologia, recursos necessários e forma de avaliação. Máximo 2 páginas.',
+      tip:'No Word online (word.live.com), o Copilot aparece no menu lateral. Na versão desktop, é necessário licença Microsoft 365.' },
+    { icon:'📧', title:'Outlook com Copilot', sub:'E-mails mais rápidos',
+      def:'No Outlook, o Copilot ajuda a escrever e-mails do zero, melhorar rascunhos existentes, ajustar o tom (formal, informal, urgente) e resumir longas cadeias de e-mails em poucas linhas.',
+      ex:'O coordenador Pedro tem 47 e-mails não lidos acumulados. Ele pede ao Copilot: "resuma os e-mails não lidos e me diga quais precisam de resposta urgente". Em 30 segundos ele sabe o que é prioritário.',
+      pr:'Escreva um e-mail para <span class="mv">[destinatário]</span> sobre <span class="mv">[assunto]</span>. Tom: <span class="mv">[formal/cordial]</span>. Inclua: <span class="mv">[informações essenciais]</span>. Assinatura: <span class="mv">[cargo/nome]</span>.',
+      tip:'Use o atalho "Coaching by Copilot" para receber sugestões de melhoria sobre um e-mail que você já escreveu — ele avalia tom, clareza e impacto.' },
+    { icon:'💬', title:'Teams com Copilot', sub:'Reuniões mais produtivas',
+      def:'No Teams, o Copilot transcreve reuniões em tempo real, gera resumos automáticos, responde perguntas sobre o que foi discutido e lista itens de ação após cada encontro.',
+      ex:'A gestora Camila facilita uma HTPC de 2 horas. Como o Copilot estava ativado, ao final da reunião ela pede: "quais professores ficaram responsáveis por ações?". O Copilot lista cada nome com a respectiva tarefa e prazo mencionado.',
+      pr:'Com base nesta reunião, crie um resumo executivo com: 1) Principais pontos discutidos, 2) Decisões tomadas, 3) Próximas ações e responsáveis. Formato: bullet points.',
+      tip:'Para usar o Copilot em reuniões do Teams, é necessário que o organizador ative a transcrição antes de iniciar — isso gera o texto que o Copilot usa como base.' },
+    { icon:'📊', title:'Excel com Copilot', sub:'Análise de dados escolar',
+      def:'No Excel, o Copilot analisa planilhas, cria fórmulas automaticamente a partir de descrições em português, identifica tendências nos dados e gera gráficos com base nas colunas selecionadas.',
+      ex:'A professora Márcia tem uma planilha com 35 alunos e 4 bimestres de notas. Ela pede ao Copilot: "destaque os alunos com média abaixo de 5 em vermelho". O Copilot aplica a formatação condicional automaticamente.',
+      pr:'Analise esta planilha de notas. Identifique: 1) Alunos com risco de reprovação (média < 5), 2) Disciplina com pior desempenho, 3) Evolução entre bimestres. Gere um gráfico de barras comparativo.',
+      tip:'No Excel online (excel.live.com), você pode perguntar ao Copilot em linguagem natural: "qual é a média geral da turma?" sem precisar saber a fórmula.' },
+  ];
+  const intCards = document.querySelectorAll('.int-card');
+  intCards.forEach((el, i) => { if(intData[i]) regCard(el, intData[i]); });
+
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changeSlide(-1);
+});
+</script>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-header">
+      <div class="modal-icon-title">
+        <div class="modal-icon" id="mIcon">📄</div>
+        <div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+</body>
+</html>
